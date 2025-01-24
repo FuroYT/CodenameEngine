@@ -18,9 +18,9 @@ class TreeMenu extends UIState {
 
 	public static var lastState:Class<FlxState> = null;  // Static for fixing the softlock bugs when resetting the state  - Nex
 
-	public function new() {
+	public function new(scriptsAllowed:Bool = true, ?scriptName:String) {
 		if(lastState == null) lastState = Type.getClass(FlxG.state);
-		super();
+		super(scriptsAllowed, scriptName);
 	}
 
 	public override function createPost() {
