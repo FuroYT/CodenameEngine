@@ -148,7 +148,7 @@ class HealthIcon extends FunkinSprite
 		}
 		var xmlValid = xmlData != null && (xmlData = xmlData.firstElement()) != null;
 
-		this.animated = allowAnimated && iconFoundData && xmlValid && Paths.framesExists(Paths.image(newIconPath), true, true);
+		this.animated = allowAnimated && iconFoundData && xmlValid && Paths.framesExists(Paths.image(newIconPath), true, true, true);
 
 		var iconAmt:Int = 0;
 		var iconSize:Int = 0;

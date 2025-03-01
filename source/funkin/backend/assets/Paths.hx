@@ -208,12 +208,12 @@ class Paths
 	 * @param library (Additional) library to load the frames from.
 	 * @return True if the images exist, false otherwise.
 	**/
-	public static function framesExists(key:String, checkAtlas:Bool = false, assetsPath:Bool = false, ?library:String) {
+	public static function framesExists(key:String, checkAtlas:Bool = false, checkMulti:Bool = true, assetsPath:Bool = false, ?library:String) {
 		var path = assetsPath ? key : Paths.image(key, library, true);
 		var noExt = Path.withoutExtension(path);
 		if(checkAtlas && Assets.exists('$noExt/Animation.json'))
 			return true;
-		if(Assets.exists('$noExt/1.png'))
+		if(checkMulti && Assets.exists('$noExt/1.png'))
 			return true;
 		if(Assets.exists('$noExt.xml'))
 			return true;
