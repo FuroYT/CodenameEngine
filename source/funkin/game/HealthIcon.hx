@@ -4,6 +4,7 @@ import haxe.xml.Access;
 import flixel.math.FlxPoint;
 import flixel.graphics.FlxGraphic;
 import flixel.util.typeLimit.OneOfTwo;
+import funkin.backend.scripting.events.NoteHitEvent;
 
 class HealthIcon extends FunkinSprite
 {
@@ -248,6 +249,28 @@ class HealthIcon extends FunkinSprite
 						}
 
 						parsedSteps.set(Std.parseInt(node.get("percent")).getDefault(0), node.get("name"));
+					case "sing":
+						if(this.animated == false) {
+							Logs.trace('Icon ${char} data <sing> is not allowed when not animated', WARNING);
+							continue;
+						}
+						if(!node.exists("direction")) {
+							Logs.trace('Icon ${char} data <sing> is missing direction', WARNING);
+							continue;
+						}
+						if(!node.exists("anim")) {
+							Logs.trace('Icon ${char} data <sing> is missing anim', WARNING);
+							continue;
+						}
+
+						var direction = node.get("direction");
+						var animName = 'sing-${direction}';
+
+						if (node.exists("offsetX") || node.exists("offsetY"))
+							addOffset(animName, Std.parseFloat(node.get("offsetX")).getDefault(0), Std.parseFloat(node.get("offsetY")).getDefault(0));
+						addAnim(animName, node.get("anim"), Std.parseInt(node.get("fps")).getDefault(24), node.get("looped").getDefault("true").toLowerCase() == "true");
+						if(animateAtlas == null && animation.exists(animName))
+							animation.getByName(animName).flipX = isPlayer != iconIsPlayer;
 				}
 		}
 
@@ -363,6 +386,13 @@ class HealthIcon extends FunkinSprite
 				curAnimState = localAnimState;
 			}
 		}
+	}
+
+	public function onNoteHit(event:NoteHitEvent)
+	{
+		var animName = 'sing-${event.direction}';
+		if (hasAnim(animName))
+			playAnim(animName);
 	}
 
 	function animFinishCallback(anim:String):Void {
