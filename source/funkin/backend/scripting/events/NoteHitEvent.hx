@@ -115,13 +115,9 @@ final class NoteHitEvent extends CancellableEvent {
 	 */
 	public var forceAnim:Null<Bool> = true;
 	/**
-	 * The attached healthIcon for the note hit event, used for sing animation for icons amongst others
+	 * The attached healthIcon used distinction for icons amongst others
 	 */
 	public var healthIcon:HealthIcon;
-	/**
-	 * Whenever or not the icon should do sing animation.
-	 */
-	public var doIconSing:Bool = true;
 
 	/**
 	 * Prevents the default sing animation from being played.
