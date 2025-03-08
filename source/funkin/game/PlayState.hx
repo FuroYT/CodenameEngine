@@ -808,7 +808,8 @@ class PlayState extends MusicBeatState
 
 		// Make icons appear in the correct spot during cutscenes
 		healthBar.update(0);
-		updateIconPositions();
+		if (updateIconPositions != null)
+			updateIconPositions();
 
 		__updateNote_event = EventManager.get(NoteUpdateEvent);
 
@@ -1275,8 +1276,9 @@ class PlayState extends MusicBeatState
 			for (icon in [iconP1, iconP2])
 				if (icon.updateBump != null)
 					icon.updateBump();
-
-		updateIconPositions();
+		
+		if (updateIconPositions != null)
+			updateIconPositions();
 
 		if (startingSong)
 		{
