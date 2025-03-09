@@ -1,10 +1,8 @@
 package funkin.game;
 
-import haxe.xml.Access;
-import flixel.math.FlxPoint;
 import flixel.graphics.FlxGraphic;
+import flixel.math.FlxPoint;
 import flixel.util.typeLimit.OneOfTwo;
-import funkin.backend.scripting.events.NoteHitEvent;
 
 class HealthIcon extends FunkinSprite
 {
@@ -75,17 +73,15 @@ class HealthIcon extends FunkinSprite
 	 *
 	 * @param steps Something like this: `[[0, 1], [20, 0]]` or `[[0, "losing"], [20, "neutral"]]` for animated icons
 	 */
-	@:dox(hide) @:noCompletion
+	@:dox(hide) @:noCompletion @:deprecated("use healthSteps instead")
 	public function setHealthSteps(steps:Array<Array<OneOfTwo<String, Int>>>):Void { // helper for hscript that can't do maps
 		if (steps == null) return;
 		healthSteps = [];
-		for(s in steps)
+		for (s in steps)
 			if (s.length > 1)
 				healthSteps[s[0]] = s[1];
-		var am = 0;
-		for(k=>e in healthSteps) am++;
 
-		if (am <= 0) healthSteps = [
+		if (Lambda.count(healthSteps) <= 0) healthSteps = [
 			0 => (this.animated ? "losing" : 1), // losing icon
 			20 => (this.animated ? "neutral" : 0), // normal icon
 		];
@@ -125,7 +121,7 @@ class HealthIcon extends FunkinSprite
 	 * @param allowAnimated Whenever the icon can be animated
 	**/
 	public function setIcon(char:String, allowAnimated:Bool = true):Void {
-		if(curCharacter == char) return;
+		if (curCharacter == char) return;
 
 		var oldIconPath = 'icons/$char';
 		var newIconPath = 'icons/$char/icon';
@@ -183,30 +179,30 @@ class HealthIcon extends FunkinSprite
 		var parsedSteps:Map<Int, String> = [];
 
 		antialiasing = true;
-		if(xmlValid) {
-			if(xmlData.exists("antialiasing"))
+		if (xmlValid) {
+			if (xmlData.exists("antialiasing"))
 				antialiasing = xmlData.get("antialiasing").toLowerCase() == "true";
 			if (xmlData.exists("offsetX"))
 				extraOffsets.x = Std.parseFloat(xmlData.get("offsetX")).getDefault(0);
 			if (xmlData.exists("offsetY"))
 				extraOffsets.y = Std.parseFloat(xmlData.get("offsetY")).getDefault(0);
 
-			for(node in xmlData.elements())
+			for (node in xmlData.elements())
 				switch(node.nodeName) {
 					case "transition":
-						if(this.animated == false) {
+						if (this.animated == false) {
 							Logs.trace('Icon ${char} data <transition> is not allowed when not animated', WARNING);
 							continue;
 						}
-						if(!node.exists("anim")) {
+						if (!node.exists("anim")) {
 							Logs.trace('Icon ${char} data <transition> is missing anim', WARNING);
 							continue;
 						}
-						if(!node.exists("to")) {
+						if (!node.exists("to")) {
 							Logs.trace('Icon ${char} data <transition> is missing to', WARNING);
 							continue;
 						}
-						if(!node.exists("from")) {
+						if (!node.exists("from")) {
 							Logs.trace('Icon ${char} data <transition> is missing from', WARNING);
 							continue;
 						}
@@ -215,18 +211,18 @@ class HealthIcon extends FunkinSprite
 						if (node.exists("offsetX") || node.exists("offsetY"))
 							addOffset(animName, Std.parseFloat(node.get("offsetX")).getDefault(0), Std.parseFloat(node.get("offsetY")).getDefault(0));
 						addAnim(animName, node.get("anim"), Std.parseInt(node.get("fps")).getDefault(24), false); // don't allow looping for transitions
-						if(animateAtlas == null && animation.exists(animName))
+						if (animateAtlas == null && animation.exists(animName))
 							animation.getByName(animName).flipX = isPlayer != iconIsPlayer;
 					case "anim":
-						if(this.animated == false) {
+						if (this.animated == false) {
 							Logs.trace('Icon ${char} data <anim> is not allowed when not animated', WARNING);
 							continue;
 						}
-						if(!node.exists("name")) {
+						if (!node.exists("name")) {
 							Logs.trace('Icon ${char} data <anim> is missing name', WARNING);
 							continue;
 						}
-						if(!node.exists("anim")) {
+						if (!node.exists("anim")) {
 							Logs.trace('Icon ${char} data <anim> is missing anim', WARNING);
 							continue;
 						}
@@ -236,14 +232,14 @@ class HealthIcon extends FunkinSprite
 						if (node.exists("offsetX") || node.exists("offsetY"))
 							addOffset(animName, Std.parseFloat(node.get("offsetX")).getDefault(0), Std.parseFloat(node.get("offsetY")).getDefault(0));
 						addAnim(animName, node.get("anim"), Std.parseInt(node.get("fps")).getDefault(24), node.get("looped").getDefault("true").toLowerCase() == "true");
-						if(animateAtlas == null && animation.exists(animName))
+						if (animateAtlas == null && animation.exists(animName))
 							animation.getByName(animName).flipX = isPlayer != iconIsPlayer;
 					case "step":
-						if(!node.exists("percent")) {
+						if (!node.exists("percent")) {
 							Logs.trace('Icon ${char} data <step> is missing percent', WARNING);
 							continue;
 						}
-						if(!node.exists("name")) {
+						if (!node.exists("name")) {
 							Logs.trace('Icon ${char} data <step> is missing name', WARNING);
 							continue;
 						}
@@ -252,7 +248,7 @@ class HealthIcon extends FunkinSprite
 				}
 		}
 
-		if(Lambda.count(parsedSteps) > 0) {
+		if (Lambda.count(parsedSteps) > 0) {
 			healthSteps = parsedSteps;
 		} else {
 			var hasLosing = this.animated ? hasAnim("losing") : iconAmt >= 2;
@@ -273,7 +269,7 @@ class HealthIcon extends FunkinSprite
 		}
 		var data = getIconAnim(health);
 		if (data.isValid) {
-			if(this.animated)
+			if (this.animated)
 				playAnim(data.animState);
 			else
 				animation.curAnim.curFrame = data.animState;
@@ -293,23 +289,21 @@ class HealthIcon extends FunkinSprite
 			updateHitbox();
 		}
 
-		defaultScale = (!xmlValid || !xmlData.exists("scale")) ? scale.x : Std.parseFloat(xmlData.get("scale")).getDefault(scale.x);
+		defaultScale = (xmlValid && xmlData.exists("scale")) ? Std.parseFloat(xmlData.get("scale")).getDefault(scale.x) : scale.x;
 	}
 
 	var normalizedNames = ["neutral", "losing", "winning"];
 	private function normalizeAnim(anim:OneOfTwo<String, Int>):OneOfTwo<String, Int> {
 		if(this.animated) {
-			if(anim is Int) {
+			if (anim is Int) {
 				var _:Int = cast anim;
 				if(_ >= 0 && _ < normalizedNames.length)
 					anim = normalizedNames[anim];
 			}
-		} else {
-			if(anim is String) {
-				var _ = normalizedNames.indexOf(cast anim);
-				if(_ >= 0)
-					anim = _;
-			}
+		} else if (anim is String) {
+			var _ = normalizedNames.indexOf(cast anim);
+			if(_ >= 0)
+				anim = _;
 		}
 		return anim;
 	}
