@@ -1,7 +1,7 @@
 package funkin.game;
 
-import flixel.math.FlxPoint;
 import flixel.graphics.FlxGraphic;
+import flixel.math.FlxPoint;
 import flixel.util.typeLimit.OneOfTwo;
 
 class HealthIcon extends FunkinSprite
@@ -12,13 +12,17 @@ class HealthIcon extends FunkinSprite
 	public var sprTracker:FlxSprite;
 	/**
 	 * Where to place the icon in relation to the sprite
+	 *
 	 * LEFT: Left of the sprite
+	 *
 	 * CENTER: Center of the sprite
+	 *
 	 * RIGHT: Right of the sprite
 	 */
 	public var sprTrackerAlignment:TrackerAlignment = RIGHT;
 	/**
 	 * Offset of the icon in relation to the sprite
+	 *
 	 * By default it is set to (10, -30) and is intended to be used with Alphabet
 	 */
 	public var sprTrackerOffset:FlxPoint = new FlxPoint(10, -30);
@@ -35,6 +39,7 @@ class HealthIcon extends FunkinSprite
 
 	/**
 	 * Health steps in this format:
+	 *
 	 * Min Percentage => Frame Index / Animation Name
 	 */
 	public var healthSteps:Map<Int, OneOfTwo<String, Int>> = null;
@@ -46,6 +51,7 @@ class HealthIcon extends FunkinSprite
 
 	/**
 	 * The Default Scale For The Icon
+	 *
 	 * This is what scale the icon should return to when its bump animation is finished
 	 */
 	public var defaultScale:Float = 1;
@@ -57,7 +63,8 @@ class HealthIcon extends FunkinSprite
 
 	/**
 	 * XML Animated Icon data
-	 * Null if the icon is not animated or its invalid
+	 *
+	 * `null` if the icon is not animated or its invalid
 	 */
 	public var xmlData:Xml;
 
@@ -68,7 +75,9 @@ class HealthIcon extends FunkinSprite
 
 	/**
 	 * Helper for HScript who can't make maps
+	 *
 	 * THIS IS DEPRECATED AND WILL BE REMOVED IN THE FUTURE
+	 *
 	 * Please set the healthSteps directly in the script instead, hscript does support maps
 	 *
 	 * @param steps Something like this: `[[0, 1], [20, 0]]` or `[[0, "losing"], [20, "neutral"]]` for animated icons
@@ -300,10 +309,12 @@ class HealthIcon extends FunkinSprite
 				if(_ >= 0 && _ < normalizedNames.length)
 					anim = normalizedNames[anim];
 			}
-		} else if (anim is String) {
-			var _ = normalizedNames.indexOf(cast anim);
-			if(_ >= 0)
-				anim = _;
+		} else {
+			if (anim is String) {
+				var _ = normalizedNames.indexOf(cast anim);
+				if(_ >= 0)
+					anim = _;
+			}
 		}
 		return anim;
 	}
