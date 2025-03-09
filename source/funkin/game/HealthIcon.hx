@@ -86,8 +86,8 @@ class HealthIcon extends FunkinSprite
 		for(k=>e in healthSteps) am++;
 
 		if (am <= 0) healthSteps = [
-			0 => this.animated ? "losing" : 1, // losing icon
-			20 => this.animated ? "neutral" : 0, // normal icon
+			0 => (this.animated ? "losing" : 1), // losing icon
+			20 => (this.animated ? "neutral" : 0), // normal icon
 		];
 	}
 
@@ -258,14 +258,14 @@ class HealthIcon extends FunkinSprite
 			var hasLosing = this.animated ? hasAnim("losing") : iconAmt >= 2;
 			var hasWinning = this.animated ? hasAnim("winning") : iconAmt >= 3;
 
-			if(hasLosing) {
+			if (hasLosing) {
 				healthSteps = [
-					0  => this.animated ? "losing" : 1, // losing icon
-					20 => this.animated ? "neutral" : 0, // normal icon
+					0  => (this.animated ? "losing" : 1), // losing icon
+					20 => (this.animated ? "neutral" : 0), // normal icon
 				];
 			} else {
 				healthSteps = [
-					0 => this.animated ? "neutral" : 0, // normal icon
+					0 => (this.animated ? "neutral" : 0), // normal icon
 				];
 			}
 			if (hasWinning)
@@ -280,7 +280,7 @@ class HealthIcon extends FunkinSprite
 			curAnimState = data.animState;
 		}
 
-		if(animateAtlas != null) {
+		if (animateAtlas != null) {
 			@:bypassAccessor
 			frameWidth = 150;
 			@:bypassAccessor
@@ -293,10 +293,7 @@ class HealthIcon extends FunkinSprite
 			updateHitbox();
 		}
 
-		if(!xmlValid || !xmlData.exists("scale"))
-			defaultScale = scale.x;
-		else
-			defaultScale = Std.parseFloat(xmlData.get("scale")).getDefault(scale.x);
+		defaultScale = (!xmlValid || !xmlData.exists("scale")) ? scale.x : Std.parseFloat(xmlData.get("scale")).getDefault(scale.x);
 	}
 
 	var normalizedNames = ["neutral", "losing", "winning"];
