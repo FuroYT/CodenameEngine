@@ -1,7 +1,7 @@
 package funkin.game;
 
-import flixel.graphics.FlxGraphic;
 import flixel.math.FlxPoint;
+import flixel.graphics.FlxGraphic;
 import flixel.util.typeLimit.OneOfTwo;
 
 class HealthIcon extends FunkinSprite
