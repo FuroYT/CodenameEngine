@@ -1,9 +1,10 @@
 package funkin.backend.utils;
 
-import funkin.backend.utils.native.*;
-import flixel.util.typeLimit.OneOfTwo;
-import flixel.util.typeLimit.OneOfThree;
 import flixel.util.FlxColor;
+import flixel.util.typeLimit.OneOfThree;
+import flixel.util.typeLimit.OneOfTwo;
+import funkin.backend.utils.native.*;
+import sys.FileSystem;
 
 /**
  * Class for functions that talk to a lower level than haxe, such as message boxes, and more.
@@ -37,7 +38,7 @@ class NativeAPI {
 	 */
 	public static function getFileAttributesRaw(path:String, useAbsol:Bool = true):Int {
 		#if windows
-		if(useAbsol) path = sys.FileSystem.absolutePath(path);
+		if(useAbsol) path = FileSystem.absolutePath(path);
 		return Windows.getFileAttributes(path);
 		#else
 		return -1;
@@ -56,7 +57,7 @@ class NativeAPI {
 	 */
 	public static function setFileAttributes(path:String, attrib:OneOfThree<NativeAPI.FileAttribute, FileAttributeWrapper, Int>, useAbsol:Bool = true):Int {
 		#if windows
-		if(useAbsol) path = sys.FileSystem.absolutePath(path);
+		if(useAbsol) path = FileSystem.absolutePath(path);
 		return Windows.setFileAttributes(path, attrib is FileAttributeWrapper ? cast(attrib, FileAttributeWrapper).getValue() : cast(attrib, Int));
 		#else
 		return 0;
@@ -240,6 +241,16 @@ class NativeAPI {
 			case YELLOW:		0xFFFFFF00;
 			case WHITE | _:		0xFFFFFFFF;
 		}
+	}
+
+	public static function resolveShortcut(path:String)
+	{
+		path = FileSystem.absolutePath(path);
+		#if windows
+		return Windows.resolveShortcut(path);
+		#else
+		return path;
+		#end
 	}
 }
 

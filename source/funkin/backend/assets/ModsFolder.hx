@@ -1,6 +1,7 @@
 package funkin.backend.assets;
 
 import funkin.backend.system.MainState;
+import funkin.backend.utils.NativeAPI;
 import funkin.menus.TitleState;
 import funkin.backend.system.Main;
 import openfl.utils.AssetCache;
@@ -47,6 +48,11 @@ class ModsFolder {
 	public static var useLibFile:Bool = true;
 
 	/**
+	 * Whenever the mod is a shortcut or direct path to a mod folder.
+	 */
+	public static var isDirectPath:Bool = false;
+
+	/**
 	 * Whenever its the first time mods has been reloaded.
 	 */
 	private static var __firstTime:Bool = true;
@@ -63,7 +69,19 @@ class ModsFolder {
 	 * @param libName
 	 */
 	public static function switchMod(mod:String) {
-		Options.lastLoadedMod = currentModFolder = mod;
+		isDirectPath = false;
+		var modFolder = mod;
+		var modIsAShortcut = FileSystem.exists('${modsPath}${mod}.lnk') && !FileSystem.exists('${modsPath}${mod}');
+		if (modIsAShortcut) {
+			var shortcutPath = NativeAPI.resolveShortcut('${modsPath}${mod}.lnk');
+			var isShortcutADirectory = FileSystem.isDirectory(shortcutPath);
+			if (isShortcutADirectory) {
+				modFolder = shortcutPath;
+				isDirectPath = true;
+			}
+		}
+		Options.lastLoadedMod = mod; 
+		currentModFolder = modFolder;
 		reloadMods();
 	}
 
@@ -99,7 +117,9 @@ class ModsFolder {
 			return mods;
 
 		for (modFolder in modsList) {
-			if (FileSystem.isDirectory('${modsPath}${modFolder}')) {
+			var dir = '${modsPath}${modFolder}';
+			var isDirectory = FileSystem.isDirectory(dir);
+			if (isDirectory) {
 				mods.push(modFolder);
 			} else {
 				var ext = Path.extension(modFolder).toLowerCase();
@@ -107,6 +127,13 @@ class ModsFolder {
 					case 'zip':
 						// is a zip mod!!
 						mods.push(Path.withoutExtension(modFolder));
+					case 'lnk':
+						var shortcutPath = NativeAPI.resolveShortcut(dir);
+						var isShortcutADirectory = FileSystem.isDirectory(shortcutPath);
+						var modAlreadyExistsAsAFolder = mods.contains(Path.withoutExtension(modFolder));
+						if (isShortcutADirectory && !modAlreadyExistsAsAFolder) {
+							mods.push(Path.withoutExtension(modFolder));
+						}
 				}
 			}
 		}

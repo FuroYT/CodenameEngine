@@ -254,5 +254,44 @@ class Windows {
 	{
 		return 0;
 	}
+	
+    @:functionCode('
+        CoInitialize(NULL);
+
+		IShellLink* psl;
+		if (FAILED(CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void**)&psl)))
+		    return ::String("");
+		
+		IPersistFile* ppf;
+		if (FAILED(psl->QueryInterface(IID_IPersistFile, (void**)&ppf))) {
+		    psl->Release();
+		    CoUninitialize();
+		    return ::String("");
+		}
+		
+		wchar_t wsz[MAX_PATH];
+		MultiByteToWideChar(CP_UTF8, 0, path.__s, -1, wsz, MAX_PATH);
+		
+		if (FAILED(ppf->Load(wsz, STGM_READ))) {
+		    ppf->Release();
+		    psl->Release();
+		    CoUninitialize();
+		    return ::String("");
+		}
+		
+		char targetPath[MAX_PATH];
+		WIN32_FIND_DATA wfd;
+		HRESULT hr = psl->GetPath(targetPath, MAX_PATH, &wfd, SLGP_UNCPRIORITY);
+		
+		ppf->Release();
+		psl->Release();
+		CoUninitialize();
+		
+		return FAILED(hr) ? ::String("") : ::String(targetPath);
+    ')
+    public static function resolveShortcut(path:String):String
+	{
+		return "";
+	}
 }
 #end

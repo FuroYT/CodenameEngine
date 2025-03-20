@@ -45,7 +45,7 @@ class MainState extends FlxState {
 				Paths.assetsTree.addLibrary(ModsFolder.loadModLib('${ModsFolder.addonsPath}$addon', StringTools.ltrim(addon.substr("[LOW]".length))));
 		}
 		if (ModsFolder.currentModFolder != null)
-			Paths.assetsTree.addLibrary(ModsFolder.loadModLib('${ModsFolder.modsPath}${ModsFolder.currentModFolder}', ModsFolder.currentModFolder));
+			Paths.assetsTree.addLibrary(ModsFolder.loadModLib('${ModsFolder.isDirectPath ? "" : ModsFolder.modsPath}${ModsFolder.currentModFolder}', ModsFolder.currentModFolder));
 
 		if (FileSystem.exists(ModsFolder.addonsPath) && FileSystem.isDirectory(ModsFolder.addonsPath)){
 			for (addon in _noPriorityAddons) Paths.assetsTree.addLibrary(ModsFolder.loadModLib('${ModsFolder.addonsPath}$addon', addon));
