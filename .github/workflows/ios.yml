@@ -32,13 +32,17 @@ jobs:
       - name: Building the game
         run: |
           haxelib run lime build ios -nosign
-      - name: Tar files
-        run: tar -zcvf CodenameEngine.tar.gz -C export/release/ios/bin .
-      - name: Uploading artifact (entire build)
+      - name: Making app from built payload
+        run: |
+          cd export/*/ios/build/*-iphoneos
+          mkdir Payload
+          mv *.app Payload
+          zip -r CodenameEngine.ipa Payload
+      - name: Uploading artifact
         uses: actions/upload-artifact@v4
         with:
           name: Codename Engine
-          path: CodenameEngine.tar.gz
+          path: export/release/ios/build/Release-iphoneos/*.ipa
       - name: Clearing already existing cache
         uses: actions/github-script@v6
         with:
