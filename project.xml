@@ -212,8 +212,6 @@
 
 	<haxedef name="hscriptPos" /> <!-- for logging -->
 
-	<set name="IPHONEOS_DEPLOYMENT_TARGET" value="12.0" if="ios" />
-	<config:ios CODE_SIGNING_REQUIRED="NO" CODE_SIGN_IDENTITY="" />
-	<config:ios PROVISIONING_PROFILE_SPECIFIER="" />
-	<config:ios DEVELOPMENT_TEAM="" />
+	<config:ios device="universal" /> <!-- supported device types; other options: "iphone", "ipad" -->
+	<config:ios deployment="12.0" /> <!-- minimum iOS version to target -->
 </project>
