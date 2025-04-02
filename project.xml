@@ -212,6 +212,9 @@
 
 	<haxedef name="hscriptPos" /> <!-- for logging -->
 
+	<setenv name="IPHONEOS_DEPLOYMENT_TARGET" value="12.0" if="ios" />
 	<target id="ios" deployment="12.0" />
 	<config:ios CODE_SIGNING_REQUIRED="NO" CODE_SIGN_IDENTITY="" />
+	<config:ios PROVISIONING_PROFILE_SPECIFIER="" />
+	<config:ios DEVELOPMENT_TEAM="" />
 </project>
