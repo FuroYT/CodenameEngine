@@ -39,11 +39,6 @@ jobs:
         with:
           name: Codename Engine
           path: CodenameEngine.tar.gz
-      # - name: Uploading artifact (executable)
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: Update-Mac
-      #     path: export/release/macos/bin/CodenameEngine
       - name: Clearing already existing cache
         uses: actions/github-script@v6
         with:
