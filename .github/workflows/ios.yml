@@ -1,5 +1,5 @@
 
-name: Mac OS Build
+name: iOS Build
 on:
   push:
   workflow_dispatch:
@@ -53,7 +53,7 @@ jobs:
               repo: context.repo.repo,
             })
             for (const cache of caches.data.actions_caches) {
-              if (cache.key == "cache-build-mac") {
+              if (cache.key == "cache-build-ios") {
                 console.log('Clearing ' + cache.key + '...')
                 await github.rest.actions.deleteActionsCacheById({
                   owner: context.repo.owner,
