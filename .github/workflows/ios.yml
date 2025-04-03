@@ -22,8 +22,8 @@ jobs:
           key: cache-build-ios
           path: |
             .haxelib/
-            export/release/ios/haxe/
-            export/release/ios/obj/
+            export/release/ios/CodenameEngine/haxe/
+            export/release/ios/CodenameEngine/obj/
           restore-keys: |
             cache-build-ios
       - name: Installing/Updating libraries
@@ -34,7 +34,7 @@ jobs:
           haxelib run lime build ios -nosign
       - name: Making app from built payload
         run: |
-          cd export/*/ios/build/*-iphoneos
+          cd export/release/ios/build/Release-iphoneos
           mkdir Payload
           mv *.app Payload
           zip -r CodenameEngine.ipa Payload
@@ -69,7 +69,7 @@ jobs:
           key: cache-build-ios
           path: |
             .haxelib/
-            export/release/ios/haxe/
-            export/release/ios/obj/
+            export/release/ios/CodenameEngine/haxe/
+            export/release/ios/CodenameEngine/obj/
           restore-keys: |
             cache-build-ios
