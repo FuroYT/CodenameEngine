@@ -1,29 +1,31 @@
 package funkin.backend.system;
 
-import funkin.editors.SaveWarning;
-import funkin.backend.assets.AssetsLibraryList;
-import funkin.backend.system.framerate.SystemInfo;
-import openfl.utils.AssetLibrary;
-import openfl.text.TextFormat;
+import flixel.addons.transition.FlxTransitionSprite.GraphicTransTileDiamond;
+import flixel.addons.transition.FlxTransitionableState;
+import flixel.addons.transition.TransitionData;
+import flixel.graphics.FlxGraphic;
+import flixel.math.FlxPoint;
+import flixel.math.FlxRect;
 import flixel.system.ui.FlxSoundTray;
+import funkin.backend.assets.AssetsLibraryList;
+import funkin.backend.assets.ModsFolder;
+import funkin.backend.system.framerate.SystemInfo;
+import funkin.backend.system.modules.*;
+import funkin.editors.SaveWarning;
+import lime.system.System;
 import openfl.Assets;
 import openfl.Lib;
 import openfl.display.Sprite;
-import flixel.graphics.FlxGraphic;
-import flixel.addons.transition.FlxTransitionableState;
-import flixel.addons.transition.FlxTransitionSprite.GraphicTransTileDiamond;
-import flixel.addons.transition.TransitionData;
-import flixel.math.FlxPoint;
-import flixel.math.FlxRect;
-import funkin.backend.system.modules.*;
+import openfl.text.TextFormat;
+import openfl.utils.AssetLibrary;
 
 #if ALLOW_MULTITHREADING
 import sys.thread.Thread;
 #end
+
 #if sys
 import sys.io.File;
 #end
-import funkin.backend.assets.ModsFolder;
 
 class Main extends Sprite
 {
@@ -38,9 +40,7 @@ class Main extends Sprite
 	public static var noTerminalColor:Bool = false;
 
 	public static var scaleMode:FunkinRatioScaleMode;
-	#if !mobile
 	public static var framerateSprite:funkin.backend.system.framerate.Framerate;
-	#end
 
 	var gameWidth:Int = 1280; // Width of the game in pixels (might be less / more in actual pixels).
 	var gameHeight:Int = 720; // Height of the game in pixels (might be less / more in actual pixels).
@@ -67,11 +67,15 @@ class Main extends Sprite
 
 		instance = this;
 
+		#if mobile
+		Sys.setCwd(getStorageDirectory());
+		#end
+
 		CrashHandler.init();
 
 		addChild(game = new FunkinGame(gameWidth, gameHeight, MainState, Options.framerate, Options.framerate, skipSplash, startFullscreen));
 
-		#if (!mobile && !web)
+		#if !web
 		addChild(framerateSprite = new funkin.backend.system.framerate.Framerate());
 		SystemInfo.init();
 		#end
@@ -131,12 +135,12 @@ class Main extends Sprite
 		#if (sys && TEST_BUILD)
 			trace("Used cne test / cne build. Switching into source assets.");
 			#if MOD_SUPPORT
-				ModsFolder.modsPath = './${pathBack}mods/';
-				ModsFolder.addonsPath = './${pathBack}addons/';
+			ModsFolder.modsPath = Sys.getCwd() + '${pathBack}mods/';
+			ModsFolder.addonsPath = Sys.getCwd() + '${pathBack}addons/';
 			#end
-			Paths.assetsTree.__defaultLibraries.push(ModsFolder.loadLibraryFromFolder('assets', './${pathBack}assets/', true));
+			Paths.assetsTree.__defaultLibraries.push(ModsFolder.loadLibraryFromFolder('assets', Sys.getCwd() + '${pathBack}assets/', true));
 		#elseif USE_ADAPTED_ASSETS
-			Paths.assetsTree.__defaultLibraries.push(ModsFolder.loadLibraryFromFolder('assets', './assets/', true));
+		Paths.assetsTree.__defaultLibraries.push(ModsFolder.loadLibraryFromFolder('assets', Sys.getCwd() + 'assets/', true));
 		#end
 
 
@@ -223,4 +227,7 @@ class Main extends Sprite
 	public static function get_timeSinceFocus():Float {
 		return (FlxG.game.ticks - _tickFocused) / 1000;
 	}
+
+	public static function getStorageDirectory():String
+		return #if ios lime.system.System.documentsDirectory #else Sys.getCwd() #end;
 }
