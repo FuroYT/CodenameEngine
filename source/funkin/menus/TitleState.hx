@@ -1,14 +1,14 @@
 package funkin.menus;
 
-import funkin.backend.MusicBeatGroup;
-import funkin.backend.utils.XMLUtil;
-import flixel.util.typeLimit.OneOfTwo;
 import flixel.group.FlxGroup;
 import flixel.input.gamepad.FlxGamepad;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
-import openfl.Assets;
+import flixel.util.typeLimit.OneOfTwo;
+import funkin.backend.MusicBeatGroup;
+import funkin.backend.utils.XMLUtil;
 import haxe.xml.Access;
+import openfl.Assets;
 
 using StringTools;
 
