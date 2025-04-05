@@ -35,7 +35,7 @@ jobs:
       - name: Building lime
         run: |
           cd .haxelib/lime/git/
-          haxelib run lime rebuild . ios -release -nocolor -eval
+          haxelib run lime rebuild . linux -release -nocolor -eval
           cd tools
           haxe tools.hxml
           cd ../../../..
