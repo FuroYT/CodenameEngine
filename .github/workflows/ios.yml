@@ -40,7 +40,14 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
           haxe -cp commandline -D analyzer-optimize --run Main setup -s --actions
-      - name: Building lime
+      - name: Building HXCPP
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          haxelib dev hxcpp .haxelib/hxcpp/git
+          cd .haxelib/hxcpp/git/tools/hxcpp
+          haxe compile.hxml
+          cd ../../../../..
+      - name: Building Lime
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
           haxelib dev lime .haxelib/lime/git
