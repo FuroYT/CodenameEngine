@@ -36,7 +36,7 @@ jobs:
         run: |
           haxelib dev lime .haxelib/lime/git
           haxelib run lime setup -alias -y -nocffi -eval
-          lime rebuild ios -release -nocolor -eval
+          haxelib run lime rebuild ios -release -nocolor -eval
           cd .haxelib/lime/git/tools
           haxe tools.hxml
           cd ../../../..
