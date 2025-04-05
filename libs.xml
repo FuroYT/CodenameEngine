@@ -20,4 +20,7 @@
 	<lib name="format" />
 	<lib name="markdown" />
 	<lib name="nape-haxe4" />
+
+	<lib global="true" name="hxp" /> <lib name="hxp" />
+	<lib global="true" name="format" /> <lib name="format" />
 </libraries>
