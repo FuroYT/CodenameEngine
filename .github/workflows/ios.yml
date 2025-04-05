@@ -31,7 +31,7 @@ jobs:
           echo "HXCPP_COMPILE_CACHE=~/.hxcpp" >> $GITHUB_ENV
       - name: Installing/Updating libraries
         run: |
-          haxe -cp commandline -D analyzer-optimize --run Main setup -s
+          haxe -cp commandline -D analyzer-optimize --run Main setup -s --actions
       - name: Building lime
         run: |
           haxelib dev lime .haxelib/lime/git

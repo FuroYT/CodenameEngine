@@ -9,6 +9,31 @@ import sys.FileSystem;
 using StringTools;
 
 class Update {
+	private static function recursiveDelete(path:String) {
+		for(file in FileSystem.readDirectory(path)) {
+			var p = '$path/$file';
+			if(FileSystem.isDirectory(p))
+				recursiveDelete(p);
+			else
+				FileSystem.deleteFile(p);
+		}
+		FileSystem.deleteDirectory(path);
+	}
+
+	public static function addMissingFolders(path:String):String {
+		#if sys
+		var folders:Array<String> = path.split("/");
+		var currentPath:String = "";
+
+		for (folder in folders) {
+			currentPath += folder + "/";
+			if (!FileSystem.exists(currentPath))
+				FileSystem.createDirectory(currentPath);
+		}
+		#end
+		return path;
+	}
+
 	public static function main(args:Array<String>) {
 		// to prevent messing with currently installed libs
 		if (!FileSystem.exists('.haxelib'))
@@ -16,12 +41,16 @@ class Update {
 
 		var filename = "./libs.xml";
 		var isSilent = false;
+		var isActions = false;
 		for(arg in args) {
 			if (arg.startsWith("--lib=")) {
 				filename = arg.substr("--lib=".length);
 			}
 			if (arg == "--silent" || arg == "-s") {
 				isSilent = true;
+			}
+			if(arg == "--actions") {
+				isActions = true;
 			}
 		}
 
@@ -39,7 +68,8 @@ class Update {
 			var lib:Library = {
 				name: libNode.att.name,
 				type: libNode.name,
-				skipDeps: libNode.has.skipDeps ? libNode.att.skipDeps == "true" : false
+				skipDeps: libNode.has.skipDeps ? libNode.att.skipDeps == "true" : false,
+				allowFast: libNode.has.allowFast ? libNode.att.allowFast == "true" : false
 			};
 			if (libNode.has.global) lib.global = libNode.att.global;
 			switch (lib.type) {
@@ -60,8 +90,21 @@ class Update {
 					Sys.command('haxelib install ${lib.name} ${lib.version != null ? " " + lib.version : " "}${globalism != null ? ' $globalism' : ''}${lib.skipDeps ? " --skip-dependencies" : ""} --always${isSilent ? " --quiet" : ""}');
 				case "git":
 					prettyPrint((lib.global == "true" ? "Globally installing" : "Locally installing") + ' "${lib.name}" from git url "${lib.url}"');
-					Sys.command('haxelib git ${lib.name} ${lib.url}${lib.ref != null ? ' ${lib.ref}' : ''}${globalism != null ? ' $globalism' : ''}${lib.skipDeps ? " --skip-dependencies" : ""} --always${isSilent ? " --quiet" : ""}');
-				default:
+					if(lib.allowFast && isActions) {
+						var oldcwd = Sys.getCwd();
+						var newCwd = oldcwd + "/.haxelib/" + lib.name + "/";
+						var newCwdGit = newCwd + "git/";
+						addMissingFolders(newCwdGit);
+						Sys.setCwd(newCwd);
+						File.saveContent(".current", "git");
+						if(FileSystem.exists(newCwdGit)) recursiveDelete(newCwdGit);
+						Sys.command('git clone ${lib.url} ${lib.name} --recurse-submodules --depth 1${lib.ref != null ? " --branch " + lib.ref : ""} --progress');
+						FileSystem.rename(newCwd + lib.name, newCwdGit);
+						Sys.setCwd(oldcwd);
+					} else {
+						Sys.command('haxelib git ${lib.name} ${lib.url}${lib.ref != null ? ' ${lib.ref}' : ''}${globalism != null ? ' $globalism' : ''}${lib.skipDeps ? " --skip-dependencies" : ""} --always${isSilent ? " --quiet" : ""}');
+					}
+					default:
 					prettyPrint('Cannot resolve library of type "${lib.type}"');
 			}
 		}
@@ -143,6 +186,7 @@ typedef Library = {
 	var name:String;
 	var type:String;
 	var skipDeps:Bool;
+	var allowFast:Bool;
 	var ?global:String;
 	var ?version:String;
 	var ?ref:String;
