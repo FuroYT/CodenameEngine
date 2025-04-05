@@ -33,7 +33,9 @@ jobs:
         run: |
           cd .haxelib/lime/git/
           haxelib run lime rebuild . windows -release
-          cd ../../..
+          cd tools
+          haxe tools.hxml
+          cd ../../../..
       - name: Building the game
         run: |
           haxelib run lime build windows
