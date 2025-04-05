@@ -108,6 +108,15 @@ class Update {
 						Sys.command('git clone ${lib.url} ${lib.name} --recurse-submodules --depth 1${lib.ref != null ? " --branch " + lib.ref : ""} --progress');
 						FileSystem.rename(newCwd + lib.name, newCwdGit);
 						Sys.setCwd(oldcwd);
+
+						if(!lib.skipDeps && FileSystem.exists(newCwdGit + "haxelib.json")) {
+							var haxelibJson:Dynamic = Json.parse(File.getContent(newCwdGit + "haxelib.json"));
+
+							var dependencies:Array<Dynamic> = cast haxelibJson.dependencies;
+							for(dep in dependencies) {
+								// TODO: handle dependencies
+							}
+						}
 					} else {
 						Sys.command('haxelib git ${lib.name} ${lib.url}${lib.ref != null ? ' ${lib.ref}' : ''}${globalism != null ? ' $globalism' : ''}${lib.skipDeps ? " --skip-dependencies" : ""} --always${isSilent ? " --quiet" : ""}');
 					}

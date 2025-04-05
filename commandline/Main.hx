@@ -61,6 +61,7 @@ class Main {
 				names: ["get-libs-hash"],
 				doc: "Gets the hash of the current libs.",
 				func: Update.getLibsHash,
+				hidden: true,
 				dDoc: "Usage: get-libs-hash\n" +
 				"\nPrints the hash of the current libs."
 			}
@@ -97,7 +98,9 @@ class Main {
 				return;
 			}
 
-			Sys.println('${matchingCommand.names.join(", ")}');
+			var names = matchingCommand.names.filter(function(n) return n != null);
+
+			Sys.println('${names.join(", ")}');
 			Sys.println("---");
 			Sys.println(matchingCommand.dDoc);
 
@@ -108,7 +111,8 @@ class Main {
 		Sys.println('Available commands (${commands.length}):\n');
 		for(line in commands) {
 			if(line.hidden) continue;
-			Sys.println('${line.names.join(", ")} - ${line.doc}');
+			var names = line.names.filter(function(n) return n != null);
+			Sys.println('${names.join(", ")} - ${line.doc}');
 		}
 	}
 }
