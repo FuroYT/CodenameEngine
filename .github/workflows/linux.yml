@@ -35,10 +35,11 @@ jobs:
       - name: Building lime
         run: |
           cd .haxelib/lime/git/
-          haxelib run lime rebuild . linux -release
+          haxelib run lime rebuild . ios -release -nocolor -eval
           cd tools
           haxe tools.hxml
           cd ../../../..
+          haxelib run lime setup -alias -y -nocffi -eval
       - name: Building the game
         run: |
           haxelib run lime build linux

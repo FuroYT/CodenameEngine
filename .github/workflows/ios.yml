@@ -26,16 +26,20 @@ jobs:
             export/release/ios/CodenameEngine/obj/
           restore-keys: |
             cache-build-ios
+      - name: Enable HXCPP compile cache
+        run: |
+          echo "HXCPP_COMPILE_CACHE=~/.hxcpp" >> $GITHUB_ENV
       - name: Installing/Updating libraries
         run: |
           haxe -cp commandline -D analyzer-optimize --run Main setup -s
       - name: Building lime
         run: |
           cd .haxelib/lime/git/
-          haxelib run lime rebuild . ios -release
+          haxelib run lime rebuild . ios -release -nocolor -eval
           cd tools
           haxe tools.hxml
           cd ../../../..
+          haxelib run lime setup -alias -y -nocffi -eval
       - name: Building the game
         run: |
           haxelib run lime build ios -nosign
