@@ -28,6 +28,7 @@ jobs:
           key: cache-build-mac-${{ steps.get_hash.outputs.hash }}
           path: |
             .haxelib/
+            ~/.hxcpp/
             export/release/macos/haxe/
             export/release/macos/obj/
           restore-keys: |
@@ -99,6 +100,7 @@ jobs:
           key: cache-build-mac-${{ steps.get_hash.outputs.hash }}
           path: |
             .haxelib/
+            ~/.hxcpp/
             export/release/macos/haxe/
             export/release/macos/obj/
           restore-keys: |

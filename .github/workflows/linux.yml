@@ -28,6 +28,7 @@ jobs:
           key: cache-build-linux-${{ steps.get_hash.outputs.hash }}
           path: |
             .haxelib/
+            ~/.hxcpp/
             export/release/linux/haxe/
             export/release/linux/obj/
           restore-keys: |
@@ -104,6 +105,7 @@ jobs:
           key: cache-build-linux-${{ steps.get_hash.outputs.hash }}
           path: |
             .haxelib/
+            ~/.hxcpp/
             export/release/linux/haxe/
             export/release/linux/obj/
           restore-keys: |

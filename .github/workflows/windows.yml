@@ -30,6 +30,7 @@ jobs:
           key: cache-build-windows-${{ steps.get_hash.outputs.hash }}
           path: |
             .haxelib/
+            ~/.hxcpp/
             export/release/windows/haxe/
             export/release/windows/obj/
           restore-keys: |
@@ -96,6 +97,7 @@ jobs:
           key: cache-build-windows-${{ steps.get_hash.outputs.hash }}
           path: |
             .haxelib/
+            ~/.hxcpp/
             export/release/windows/haxe/
             export/release/windows/obj/
           restore-keys: |
