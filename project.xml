@@ -82,10 +82,16 @@
 	<!--Disable the Flixel core debugger. Automatically gets set whenever you compile in release mode!-->
 	<haxedef name="FLX_NO_DEBUG" unless="debug" />
 
+	<!-- Allows mobile to access the app files for mods and addons -->
+	<haxedef name="FILE_SHARING"/>
+
 	<!-- _________________________________ Custom _______________________________ -->
 
 	<!--Place custom nodes like icons here (higher priority to override the HaxeFlixel icon)-->
 	<section if="mobile">
+		<icon path="art/iconMobile.png" size="16"/>
+		<icon path="art/iconMobile.png" size="32"/>
+		<icon path="art/iconMobile.png" size="64"/>
 		<icon path="art/iconMobile.png"/>
 	</section>
 	<section unless="mobile">
