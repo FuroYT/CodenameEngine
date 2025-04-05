@@ -29,6 +29,11 @@ jobs:
       - name: Installing/Updating libraries
         run: |
           haxe -cp commandline -D analyzer-optimize --run Main setup -s
+      - name: Building lime
+        run: |
+          cd .haxelib/lime/git/
+          haxelib run lime rebuild . windows -release
+          cd ../../..
       - name: Building the game
         run: |
           haxelib run lime build windows
