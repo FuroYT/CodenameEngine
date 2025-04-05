@@ -73,8 +73,11 @@ jobs:
       #     path: export/release/windows/bin/CodenameEngine.exe
       - name: Clearing already existing cache
         uses: actions/github-script@v6
+        env:
+          HASH: ${{ steps.get_hash.outputs.hash }}
         with:
           script: |
+            const hash = process.env.HASH;
             const caches = await github.rest.actions.getActionsCacheList({
               owner: context.repo.owner,
               repo: context.repo.repo,

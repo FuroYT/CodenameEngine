@@ -63,7 +63,7 @@ jobs:
           mkdir Payload
           mv *.app Payload
           zip -r CodenameEngine.ipa Payload
-      - name: Uploading artifact
+      - name: Uploading artifact (entire build)
         uses: actions/upload-artifact@v4
         with:
           name: Codename Engine
