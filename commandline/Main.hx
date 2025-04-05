@@ -56,6 +56,13 @@ class Main {
 				func: Compiler.testRelease,
 				dDoc: "Usage: release <optional arguments>\n" +
 				"\nThis will create and run a final ready-for-release build, which means this build will be able to be release on websites such as GameBanana without worrying about source-dependant stuff."
+			},
+			{
+				names: ["get-libs-hash"],
+				doc: "Gets the hash of the current libs.",
+				func: Update.getLibsHash,
+				dDoc: "Usage: get-libs-hash\n" +
+				"\nPrints the hash of the current libs."
 			}
 		];
 	}
@@ -100,6 +107,7 @@ class Main {
 		Sys.println("Codename Engine Command Line utility");
 		Sys.println('Available commands (${commands.length}):\n');
 		for(line in commands) {
+			if(line.hidden) continue;
 			Sys.println('${line.names.join(", ")} - ${line.doc}');
 		}
 	}
@@ -110,4 +118,5 @@ typedef Command = {
 	var func:Array<String>->Void;
 	var ?doc:String;
 	var ?dDoc:String;
+	var ?hidden:Bool;
 }

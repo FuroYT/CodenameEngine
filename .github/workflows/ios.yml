@@ -10,29 +10,38 @@ jobs:
     runs-on: macos-13
     steps:
       - name: Pulling the new commit
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setting up Haxe
         uses: krdlab/setup-haxe@v1
         with:
           haxe-version: 4.2.5
+      - name: Get Libs Hash
+        id: get_hash
+        run: |
+          export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          echo "hash=$(haxe -cp commandline -D analyzer-optimize --run Main get-libs-hash)" >> $GITHUB_OUTPUT
       - name: Restore existing build cache for faster compilation
+        id: cache
         uses: actions/cache@v3
         with:
           # not caching the bin folder to prevent asset duplication and stuff like that
-          key: cache-build-ios
+          key: cache-build-ios-${{ steps.get_hash.outputs.hash }}
           path: |
             .haxelib/
+            ~/.hxcpp/
             export/release/ios/CodenameEngine/haxe/
             export/release/ios/CodenameEngine/obj/
           restore-keys: |
-            cache-build-ios
+            cache-build-ios-${{ steps.get_hash.outputs.hash }}
       - name: Enable HXCPP compile cache
         run: |
           echo "HXCPP_COMPILE_CACHE=~/.hxcpp" >> $GITHUB_ENV
       - name: Installing/Updating libraries
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           haxe -cp commandline -D analyzer-optimize --run Main setup -s --actions
       - name: Building lime
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           haxelib dev lime .haxelib/lime/git
           haxelib run lime setup -alias -y -nocffi -eval
@@ -54,31 +63,35 @@ jobs:
           path: export/release/ios/build/Release-iphoneos/*.ipa
       - name: Clearing already existing cache
         uses: actions/github-script@v6
+        env:
+          HASH: ${{ steps.get_hash.outputs.hash }}
         with:
           script: |
+            const hash = process.env.HASH;
             const caches = await github.rest.actions.getActionsCacheList({
               owner: context.repo.owner,
               repo: context.repo.repo,
-            })
+            });
             for (const cache of caches.data.actions_caches) {
-              if (cache.key == "cache-build-ios") {
-                console.log('Clearing ' + cache.key + '...')
+              if (cache.key == "cache-build-ios-" + hash) {
+                console.log('Clearing ' + cache.key + '...');
                 await github.rest.actions.deleteActionsCacheById({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   cache_id: cache.id,
-                })
-                console.log("Cache cleared.")
+                });
+                console.log("Cache cleared.");
               }
             }
       - name: Uploading new cache
         uses: actions/cache@v3
         with:
           # caching again since for some reason it doesnt work with the first post cache shit
-          key: cache-build-ios
+          key: cache-build-ios-${{ steps.get_hash.outputs.hash }}
           path: |
             .haxelib/
+            ~/.hxcpp/
             export/release/ios/CodenameEngine/haxe/
             export/release/ios/CodenameEngine/obj/
           restore-keys: |
-            cache-build-ios
+            cache-build-ios-${{ steps.get_hash.outputs.hash }}

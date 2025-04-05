@@ -1,5 +1,7 @@
 package commands;
 
+import commands.api.Haxelib;
+import commands.api.Github;
 import haxe.xml.Access;
 import haxe.Json;
 import sys.io.File;
@@ -34,6 +36,35 @@ class Update {
 		return path;
 	}
 
+	public static function getLibs(filename:String):Array<Library> {
+		if(!FileSystem.exists(filename)) {
+			prettyPrint('Cannot find libs.xml file at "$filename"');
+			Sys.exit(1);
+		}
+
+		var libs:Array<Library> = [];
+		var libsXML:Access = new Access(Xml.parse(File.getContent(filename)).firstElement());
+
+		for (libNode in libsXML.elements) {
+			var lib:Library = {
+				name: libNode.att.name,
+				type: libNode.name,
+				skipDeps: libNode.has.skipDeps ? libNode.att.skipDeps == "true" : false,
+			};
+			if (libNode.has.global) lib.global = libNode.att.global;
+			switch (lib.type) {
+				case "lib":
+					if (libNode.has.version) lib.version = libNode.att.version;
+				case "git":
+					if (libNode.has.url) lib.url = libNode.att.url;
+					if (libNode.has.ref) lib.ref = libNode.att.ref;
+			}
+			libs.push(lib);
+		}
+
+		return libs;
+	}
+
 	public static function main(args:Array<String>) {
 		// to prevent messing with currently installed libs
 		if (!FileSystem.exists('.haxelib'))
@@ -54,33 +85,9 @@ class Update {
 			}
 		}
 
-		if(!FileSystem.exists(filename)) {
-			prettyPrint('Cannot find libs.xml file at "$filename"');
-			return;
-		}
+		var libs = getLibs(filename);
 
 		prettyPrint("Preparing installation...");
-
-		var libs:Array<Library> = [];
-		var libsXML:Access = new Access(Xml.parse(File.getContent(filename)).firstElement());
-
-		for (libNode in libsXML.elements) {
-			var lib:Library = {
-				name: libNode.att.name,
-				type: libNode.name,
-				skipDeps: libNode.has.skipDeps ? libNode.att.skipDeps == "true" : false,
-				allowFast: libNode.has.allowFast ? libNode.att.allowFast == "true" : false
-			};
-			if (libNode.has.global) lib.global = libNode.att.global;
-			switch (lib.type) {
-				case "lib":
-					if (libNode.has.version) lib.version = libNode.att.version;
-				case "git":
-					if (libNode.has.url) lib.url = libNode.att.url;
-					if (libNode.has.ref) lib.ref = libNode.att.ref;
-			}
-			libs.push(lib);
-		}
 
 		for(lib in libs) {
 			var globalism:Null<String> = lib.global == "true" ? "--global" : null;
@@ -90,7 +97,7 @@ class Update {
 					Sys.command('haxelib install ${lib.name} ${lib.version != null ? " " + lib.version : " "}${globalism != null ? ' $globalism' : ''}${lib.skipDeps ? " --skip-dependencies" : ""} --always${isSilent ? " --quiet" : ""}');
 				case "git":
 					prettyPrint((lib.global == "true" ? "Globally installing" : "Locally installing") + ' "${lib.name}" from git url "${lib.url}"');
-					if(lib.allowFast && isActions) {
+					if(isActions) {
 						var oldcwd = Sys.getCwd();
 						var newCwd = oldcwd + "/.haxelib/" + lib.name + "/";
 						var newCwdGit = newCwd + "git/";
@@ -104,7 +111,7 @@ class Update {
 					} else {
 						Sys.command('haxelib git ${lib.name} ${lib.url}${lib.ref != null ? ' ${lib.ref}' : ''}${globalism != null ? ' $globalism' : ''}${lib.skipDeps ? " --skip-dependencies" : ""} --always${isSilent ? " --quiet" : ""}');
 					}
-					default:
+				default:
 					prettyPrint('Cannot resolve library of type "${lib.type}"');
 			}
 		}
@@ -180,13 +187,41 @@ class Update {
 			str += ch;
 		return str;
 	}
+
+	public static function getLibsHash(args:Array<String>) {
+		var filename = "./libs.xml";
+		for(arg in args) {
+			if (arg.startsWith("--lib=")) {
+				filename = arg.substr("--lib=".length);
+			}
+		}
+
+		var libs = getLibs(filename);
+
+		var hashes:Array<String> = [];
+		for(lib in libs) {
+			switch(lib.type) {
+				case "lib":
+					hashes.push(Haxelib.getVersion(lib.name, lib.version));
+				case "git":
+					if(lib.url.startsWith("https://github.com/"))
+						hashes.push(Github.getLatestCommit(lib.url.substr("https://github.com/".length), lib.ref != null ? lib.ref : "master"));
+					else
+						Sys.stderr().writeString('Cannot get hash for git library ${lib.name} because it\'s not a github repo, url is ${lib.url}\n');
+				default:
+					prettyPrint('Cannot resolve library of type "${lib.type}"');
+			}
+		}
+
+		var hash = haxe.crypto.Md5.encode(hashes.join(","));
+		Sys.print(hash);
+	}
 }
 
 typedef Library = {
 	var name:String;
 	var type:String;
 	var skipDeps:Bool;
-	var allowFast:Bool;
 	var ?global:String;
 	var ?version:String;
 	var ?ref:String;
