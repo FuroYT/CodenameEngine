@@ -7,7 +7,7 @@ jobs:
   build:
     name: Linux Build
     permissions: write-all
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Pulling the source
         uses: actions/checkout@v2
@@ -28,7 +28,9 @@ jobs:
             cache-build-linux
       - name: Installing LibVLC
         run: |
+          sudo apt-get update
           sudo apt-get install libvlc-dev libvlccore-dev
+          sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev g++-multilib gcc-multilib libasound2-dev libx11-dev libxext-dev libxi-dev libxrandr-dev libxinerama-dev libmbedtls-dev libpng-dev libturbojpeg-dev libuv1-dev libvorbis-dev
       - name: Installing/Updating libraries
         run: |
           haxe -cp commandline -D analyzer-optimize --run Main setup -s
