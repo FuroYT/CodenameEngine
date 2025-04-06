@@ -19,6 +19,8 @@ import openfl.display.Sprite;
 import openfl.text.TextFormat;
 import openfl.utils.AssetLibrary;
 
+import funkin.backend.system.MobileInput;
+
 #if ALLOW_MULTITHREADING
 import sys.thread.Thread;
 #end
@@ -74,6 +76,8 @@ class Main extends Sprite
 		CrashHandler.init();
 
 		addChild(game = new FunkinGame(gameWidth, gameHeight, MainState, Options.framerate, Options.framerate, skipSplash, startFullscreen));
+
+		MobileInput.init();
 
 		#if !web
 		addChild(framerateSprite = new funkin.backend.system.framerate.Framerate());
