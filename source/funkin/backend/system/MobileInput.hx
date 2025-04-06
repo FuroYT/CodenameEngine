@@ -43,7 +43,7 @@ class MobileInput {
 				var startPos:FlxPoint = touchesStartPos.get(touch.touchPointID);
 				var endPos:FlxPoint = touchesPos.get(touch.touchPointID);
 
-				var distance = FlxMath.vectorLength(startPos.x - endPos.x, startPos.y - endPos.y);
+				var distance = 0; //FlxMath.vectorLength(startPos.x - endPos.x, startPos.y - endPos.y);
 				var distanceOfScreenPercentage = distance / FlxG.width;
 
 				touchesTime.remove(touch.touchPointID);
