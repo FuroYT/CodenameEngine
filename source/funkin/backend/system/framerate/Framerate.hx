@@ -28,7 +28,7 @@ class Framerate extends Sprite {
 	 * 1: FPS VISIBLE
 	 * 2: FPS & DEBUG INFO VISIBLE
 	 */
-	public static var debugMode:Int = 1;
+	public static var debugMode:Int = #if mobile 2 #else 1 #end;
 	public static var offset:FlxPoint = new FlxPoint();
 
 	public var bgSprite:Bitmap;
@@ -53,6 +53,11 @@ class Framerate extends Sprite {
 
 		x = 10;
 		y = 2;
+
+		#if mobile
+		x += FlxG.game.x;
+		y += FlxG.game.y;
+		#end
 
 		FlxG.stage.addEventListener(KeyboardEvent.KEY_UP, function(e:KeyboardEvent) {
 			switch(e.keyCode) {
@@ -81,6 +86,10 @@ class Framerate extends Sprite {
 		#if (gl_stats && !disable_cffi && (!html5 || !canvas))
 		__addCategory(new StatsInfo());
 		#end
+
+		#if mobile
+		__addCategory(new MobileInfo());
+		#end
 	}
 
 	private function __addCategory(category:FramerateCategory) {
@@ -108,6 +117,11 @@ class Framerate extends Sprite {
 
 		x = 10 + offset.x;
 		y = 2 + offset.y;
+
+		#if mobile
+		x += FlxG.game.x;
+		y += FlxG.game.y;
+		#end
 
 		var width = Math.max(fpsCounter.width, #if SHOW_BUILD_ON_FPS Math.max(memoryCounter.width, codenameBuildField.width) #else memoryCounter.width #end) + (x*2);
 		var height = #if SHOW_BUILD_ON_FPS codenameBuildField.y + codenameBuildField.height #else memoryCounter.y + memoryCounter.height #end;
