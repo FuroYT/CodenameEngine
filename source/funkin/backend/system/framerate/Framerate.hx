@@ -88,7 +88,7 @@ class Framerate extends Sprite {
 		#end
 
 		#if mobile
-		__addCategory(new MobileInfo());
+		__addCategory(new MobileInputInfo());
 		#end
 	}
 

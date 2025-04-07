@@ -1,7 +1,6 @@
 package funkin.backend.system.framerate;
 
 #if mobile
-
 import funkin.backend.system.MobileInput;
 class MobileInputInfo extends FramerateCategory {
 	public function new() {
