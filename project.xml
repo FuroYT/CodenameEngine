@@ -110,6 +110,7 @@
 		<icon path="art/iconOG.png" size='1024' />
 	</section>
 
+	<source path="natives/ios" if="ios" />
 
 	<!-- _________________________________ Engine Settings _______________________________ -->
 
