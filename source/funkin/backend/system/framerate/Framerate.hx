@@ -22,7 +22,7 @@ class Framerate extends Sprite {
 	#end
 
 	//ios uses blank for default font i think
-	public static var fontName:String = #if windows '${Sys.getEnv("windir")}\\Fonts\\consola.ttf' #elseif ios "Times" #else "_sans" #end;
+	public static var fontName:String = #if windows '${Sys.getEnv("windir")}\\Fonts\\consola.ttf' #elseif ios "Times New Roman" #else "_sans" #end;
 
 	/**
 	 * 0: FPS INVISIBLE
