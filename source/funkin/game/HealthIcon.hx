@@ -162,7 +162,7 @@ class HealthIcon extends FunkinSprite
 
 		animateAtlas = null; // reset
 		if (this.animated)
-			loadSprite(Paths.image(iconPath));
+			loadSprite(Paths.image(newIconPath));
 		else {
 			var iconAsset:FlxGraphic = FlxG.bitmap.add(Paths.image(iconPath));
 			var assetW:Float = iconAsset.width;
@@ -242,19 +242,20 @@ class HealthIcon extends FunkinSprite
 
 						var animName = node.get("name");
 
-						addOffset(animName, 0, 0);
-
+						var offsetX:Float = 0;
+						var offsetY:Float = 0;
 						if (node.exists("offsetX"))
-							animOffsets[name].x = Std.parseFloat(node.get("offsetX")).getDefault(0);
-
-						if (node.exists("offsetx"))
-							animOffsets[name].x = Std.parseFloat(node.get("offsetx")).getDefault(0);
+							offsetX = Std.parseFloat(node.get("offsetX")).getDefault(0);
+						else if (node.exists("offsetx"))
+							offsetX = Std.parseFloat(node.get("offsetx")).getDefault(0);
 						
 						if (node.exists("offsetY"))
-							animOffsets[name].y = Std.parseFloat(node.get("offsetY")).getDefault(0);
+							offsetY = Std.parseFloat(node.get("offsetY")).getDefault(0);
+						else if (node.exists("offsety"))
+							offsetY = Std.parseFloat(node.get("offsety")).getDefault(0);
 
-						if (node.exists("offsety"))
-							animOffsets[name].y = Std.parseFloat(node.get("offsety")).getDefault(0);
+						addOffset(animName, offsetX, offsetY);
+
 						addAnim(animName, node.get("anim"), Std.parseInt(node.get("fps")).getDefault(24), node.get("looped").getDefault("true").toLowerCase() == "true");
 						if (animateAtlas == null && animation.exists(animName))
 							animation.getByName(animName).flipX = isPlayer != iconIsPlayer;
@@ -314,6 +315,8 @@ class HealthIcon extends FunkinSprite
 		}
 
 		defaultScale = (xmlValid && xmlData.exists("scale")) ? Std.parseFloat(xmlData.get("scale")).getDefault(scale.x) : scale.x;
+		scale.set(defaultScale, defaultScale);
+		updateHitbox();
 	}
 
 	var normalizedNames = ["neutral", "losing", "winning"];
