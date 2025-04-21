@@ -249,7 +249,7 @@ class HealthIcon extends FunkinSprite
 						if (node.exists("offsetY"))
 							animOffsets[name].y = Std.parseFloat(node.get("offsetY")).getDefault(0);
 
-						if (node.exists("offsetx"))
+						if (node.exists("offsety"))
 							animOffsets[name].y = Std.parseFloat(node.get("offsety")).getDefault(0);
 						addAnim(animName, node.get("anim"), Std.parseInt(node.get("fps")).getDefault(24), node.get("looped").getDefault("true").toLowerCase() == "true");
 						if (animateAtlas == null && animation.exists(animName))
