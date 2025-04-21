@@ -168,8 +168,12 @@ class HealthIcon extends FunkinSprite
 			var assetW:Float = iconAsset.width;
 			var assetH:Float = iconAsset.height;
 
-			iconAmt = Math.floor(assetW / assetH);
+			iconAmt = Math.round(assetW / assetH); // Just in case the icon is in a weird aspect ratio
 			iconSize = Math.floor(assetW / iconAmt);
+			if (iconSize * iconAmt > assetW) {
+				iconSize = Math.floor(assetW / iconAmt);
+				iconAmt = Math.floor(assetW / iconSize);
+			}
 
 			loadGraphic(iconAsset, true, Std.int(Math.min(iconSize, assetW)), Std.int(Math.min(iconSize, assetH)));
 
