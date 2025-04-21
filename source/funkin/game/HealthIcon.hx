@@ -238,8 +238,19 @@ class HealthIcon extends FunkinSprite
 
 						var animName = node.get("name");
 
-						if (node.exists("offsetX") || node.exists("offsetY"))
-							addOffset(animName, Std.parseFloat(node.get("offsetX")).getDefault(0), Std.parseFloat(node.get("offsetY")).getDefault(0));
+						addOffset(animName, 0, 0);
+
+						if (node.exists("offsetX"))
+							animOffsets[name].x = Std.parseFloat(node.get("offsetX")).getDefault(0);
+
+						if (node.exists("offsetx"))
+							animOffsets[name].x = Std.parseFloat(node.get("offsetx")).getDefault(0);
+						
+						if (node.exists("offsetY"))
+							animOffsets[name].y = Std.parseFloat(node.get("offsetY")).getDefault(0);
+
+						if (node.exists("offsetx"))
+							animOffsets[name].y = Std.parseFloat(node.get("offsety")).getDefault(0);
 						addAnim(animName, node.get("anim"), Std.parseInt(node.get("fps")).getDefault(24), node.get("looped").getDefault("true").toLowerCase() == "true");
 						if (animateAtlas == null && animation.exists(animName))
 							animation.getByName(animName).flipX = isPlayer != iconIsPlayer;
