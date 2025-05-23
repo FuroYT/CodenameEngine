@@ -23,7 +23,9 @@ class Macros {
 			#if VIDEO_CUTSCENES "hxvlc.flixel", "hxvlc.openfl", #end
 			#if NAPE_ENABLED "nape", "flixel.addons.nape", #end
 			// BASE HAXE
-			"DateTools", "EReg", "Lambda", "StringBuf", "haxe.crypto", "haxe.display", "haxe.exceptions", "haxe.extern", "scripting"
+			"DateTools", "EReg", "Lambda", "StringBuf", "haxe.crypto", "haxe.display", "haxe.exceptions", "haxe.extern", "scripting",
+			#if funkin.vis "funkin.vis", "funkin.vis.dsp", #end
+			#if grig.audio "grig.audio", "grig.audio.lime", "grig.audio.cpp", #end
 		])
 			Compiler.include(inc);
 

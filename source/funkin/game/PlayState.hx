@@ -974,6 +974,12 @@ class PlayState extends MusicBeatState
 	}
 
 	public override function destroy() {
+		#if MODCHARTING_FEATURES
+		if (modchart.Manager.instance != null) {
+			modchart.Manager.instance.destroy();
+			modchart.Manager.instance = null;
+		}
+		#end
 		scripts.call("destroy");
 		for(g in __cachedGraphics)
 			g.useCount--;
