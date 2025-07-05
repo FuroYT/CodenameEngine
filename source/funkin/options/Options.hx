@@ -36,7 +36,7 @@ class Options
 	public static var framerate:Int = 120;
 	public static var gpuOnlyBitmaps:Bool = #if (mac || web) false #else true #end; // causes issues on mac and web
 	#if MODCHARTING_FEATURES
-	public static var modchartingHoldSubdivisions:Int = 4;
+	public static var modchartingHoldSubdivisions:Int = 2;
 	#end
 
 	public static var lastLoadedMod:String = null;
