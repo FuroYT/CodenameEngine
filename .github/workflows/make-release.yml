@@ -115,24 +115,18 @@ jobs:
         with:
           workflow: windows.yml
           workflow_conclusion: success
-          name: windows-build
-          path: artifacts/windows
 
       - name: Download macOS artifact
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: macos.yml
           workflow_conclusion: success
-          name: macos-build
-          path: artifacts/macos
 
       - name: Download Linux artifact
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: linux.yml
           workflow_conclusion: success
-          name: linux-build
-          path: artifacts/linux
 
       # -------------------------------
       # 3. Download previous release assets for update-assets.zip
