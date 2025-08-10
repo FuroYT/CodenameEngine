@@ -4,187 +4,171 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Release tag name (e.g. v1.0.1-rc2, v1.0.2)'
+        description: 'Tag name for the release (e.g. v1.0.0 or v1.0.1-rc1)'
         required: true
+        type: string
       prerelease:
-        description: 'Is this a prerelease?'
+        description: 'Is this a prerelease? true/false'
         required: true
-        default: false
         type: boolean
 
 jobs:
-  collect-and-release:
+  build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      # -------------------------------
-      # 1. Decide which release to pull assets from
-      # -------------------------------
-      - name: Select previous release for update-assets
-        id: select_release
-        run: |
-          strip_prerelease() {
-            echo "$1" | sed -E 's/^v//' | sed 's/-rc.*//'
-          }
+      - name: Create renamed folder
+        run: mkdir -p renamed update_assets_temp
 
-          rc_number() {
-            echo "$1" | grep -oP '(?<=-rc)[0-9]+' || echo 0
-          }
-
-          strip_v() {
-            echo "$1" | sed -E 's/^v//'
-          }
-
-          version_gte() {
-            IFS='.' read -r -a ver1 <<< "$(strip_v "$1")"
-            IFS='.' read -r -a ver2 <<< "$(strip_v "$2")"
-            for i in 0 1 2; do
-              v1=${ver1[i]:-0}
-              v2=${ver2[i]:-0}
-              if ((10#$v1 > 10#$v2)); then
-                return 0
-              elif ((10#$v1 < 10#$v2)); then
-                return 1
-              fi
-            done
-            return 0
-          }
-
-          echo "Fetching releases info..."
-          all_releases=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases")
-
-          latest_prerelease=$(echo "$all_releases" | jq '[ .[] | select(.prerelease == true) ] | first')
-          latest_prerelease_tag=$(echo "$latest_prerelease" | jq -r '.tag_name // empty')
-          latest_prerelease_id=$(echo "$latest_prerelease" | jq -r '.id // empty')
-
-          latest_release=$(echo "$all_releases" | jq '[ .[] | select(.prerelease == false) ] | first')
-          latest_release_tag=$(echo "$latest_release" | jq -r '.tag_name // empty')
-          latest_release_id=$(echo "$latest_release" | jq -r '.id // empty')
-
-          echo "Latest prerelease: $latest_prerelease_tag"
-          echo "Latest full release: $latest_release_tag"
-
-          use_prerelease="${{ github.event.inputs.prerelease }}"
-
-          if [ "$use_prerelease" = "true" ] && [ -n "$latest_prerelease_tag" ] && [ -n "$latest_release_tag" ]; then
-            base_pre=$(strip_prerelease "$latest_prerelease_tag")
-            base_rel=$(strip_prerelease "$latest_release_tag")
-
-            if version_gte "$base_rel" "$base_pre"; then
-              echo "Full release is newer or equal, using full release assets."
-              selected_id="$latest_release_id"
-              selected_tag="$latest_release_tag"
-            else
-              pre_num=$(rc_number "$latest_prerelease_tag")
-              rel_num=$(rc_number "$latest_release_tag")
-              if (( pre_num > rel_num )); then
-                echo "Prerelease is newer, using prerelease assets."
-                selected_id="$latest_prerelease_id"
-                selected_tag="$latest_prerelease_tag"
-              else
-                echo "Full release is newer or equal, using full release assets."
-                selected_id="$latest_release_id"
-                selected_tag="$latest_release_tag"
-              fi
-            fi
-          elif [ "$use_prerelease" = "true" ] && [ -n "$latest_prerelease_tag" ]; then
-            echo "Only prerelease found, using prerelease assets."
-            selected_id="$latest_prerelease_id"
-            selected_tag="$latest_prerelease_tag"
-          elif [ -n "$latest_release_tag" ]; then
-            echo "Using full release assets."
-            selected_id="$latest_release_id"
-            selected_tag="$latest_release_tag"
-          else
-            echo "No suitable release found."
-            exit 1
-          fi
-
-          echo "release_id=$selected_id" >> $GITHUB_OUTPUT
-          echo "release_tag=$selected_tag" >> $GITHUB_OUTPUT
-
-      # -------------------------------
-      # 2. Download artifacts from other workflows
-      # -------------------------------
-      - name: Download Windows artifact
+      # WINDOWS ARTIFACTS
+      - name: Download Windows full build artifact
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: windows.yml
-          workflow_conclusion: success
+          name: Codename Engine
+          path: artifacts/windows/full_build
 
-      - name: Download macOS artifact
+      - name: Download Windows executable artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: windows.yml
+          name: Codename Engine (Executable)
+          path: artifacts/windows/executable
+
+      - name: Unzip Windows executable
+        run: unzip artifacts/windows/executable/CodenameEngine.zip -d artifacts/windows/executable/
+
+      - name: Rename Windows executable
+        run: mv artifacts/windows/executable/CodenameEngine.exe renamed/update-windows.exe
+
+      - name: Rename Windows full build zip
+        run: mv artifacts/windows/full_build/"Codename Engine.zip" "renamed/Codename Engine-windows.zip"
+
+      # macOS ARTIFACTS
+      - name: Download macOS full build artifact
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: macos.yml
-          workflow_conclusion: success
+          name: Codename Engine
+          path: artifacts/macos/full_build
 
-      - name: Download Linux artifact
+      - name: Download macOS executable artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: macos.yml
+          name: Codename Engine (Executable)
+          path: artifacts/macos/executable
+
+      - name: Unzip macOS executable
+        run: unzip artifacts/macos/executable/CodenameEngine.zip -d artifacts/macos/executable/
+
+      - name: Rename macOS executable
+        run: mv artifacts/macos/executable/CodenameEngine renamed/update-macos
+
+      - name: Make macOS executable executable
+        run: chmod +x renamed/update-macos
+
+      - name: Rename macOS full build zip
+        run: mv artifacts/macos/full_build/"Codename Engine.zip" "renamed/Codename Engine-macos.zip"
+
+      # LINUX ARTIFACTS
+      - name: Download Linux full build artifact
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: linux.yml
-          workflow_conclusion: success
+          name: Codename Engine
+          path: artifacts/linux/full_build
 
-      # -------------------------------
-      # 3. Download previous release assets for update-assets.zip
-      # -------------------------------
-      - name: Download previous release assets
+      - name: Download Linux executable artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: linux.yml
+          name: Codename Engine (Executable)
+          path: artifacts/linux/executable
+
+      - name: Unzip Linux executable
+        run: unzip artifacts/linux/executable/CodenameEngine.zip -d artifacts/linux/executable/
+
+      - name: Rename Linux executable
+        run: mv artifacts/linux/executable/CodenameEngine renamed/update-linux
+
+      - name: Make Linux executable executable
+        run: chmod +x renamed/update-linux
+
+      - name: Rename Linux full build zip
+        run: mv artifacts/linux/full_build/"Codename Engine.zip" "renamed/Codename Engine-linux.zip"
+
+      # Get latest release tag to base update-assets.zip on
+      - name: Determine release tag for update-assets.zip base
+        id: get_base_release
         run: |
-          mkdir -p update_assets
-          release_id="${{ steps.select_release.outputs.release_id }}"
-          assets=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/$release_id" | jq -r '.assets[].url')
+          echo "Looking for base release..."
 
-          for asset_url in $assets; do
-            curl -L -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -H 'Accept: application/octet-stream' \
-              "$asset_url" -o temp_asset
-            unzip -o temp_asset -d update_assets || tar -xzf temp_asset -C update_assets || true
-            rm -f temp_asset
+          if [ "${{ github.event.inputs.prerelease }}" = "true" ]; then
+            # For prerelease input, find the last prerelease, else last normal release if no prior prerelease
+            LAST_PRERELEASE=$(gh release list --prerelease --limit 1 --json tagName --jq '.[0].tagName' || echo "")
+            if [ -z "$LAST_PRERELEASE" ]; then
+              BASE_RELEASE=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
+            else
+              BASE_RELEASE=$LAST_PRERELEASE
+            fi
+          else
+            BASE_RELEASE=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
+          fi
+
+          echo "base_release=$BASE_RELEASE" >> $GITHUB_OUTPUT
+
+      - name: Download assets from base release
+        run: |
+          echo "Downloading assets from release ${{ steps.get_base_release.outputs.base_release }}"
+
+          gh release download "${{ steps.get_base_release.outputs.base_release }}" --pattern "*.zip" -D update_assets_temp
+
+      # Extract only assets folder from the downloaded zips into update_assets_temp/assets
+      - name: Extract assets folders from zips
+        run: |
+          mkdir -p update_assets_temp/extracted_assets
+          for f in update_assets_temp/*.zip; do
+            unzip -j "$f" 'assets/*' -d update_assets_temp/extracted_assets || true
           done
 
-          zip -r update-assets.zip update_assets
-
-      # -------------------------------
-      # 4. Rename builds and handle macOS nested zip
-      # -------------------------------
-      - name: Prepare renamed folder
-        run: mkdir renamed
-
-      - name: Windows rename
+      # Recreate the folder structure under update_assets_temp/assets/
+      - name: Recreate assets folder hierarchy
         run: |
-          mv artifacts/windows/CodenameEngine.exe "renamed/update-windows.exe"
-          mv artifacts/windows/CodenameEngine.zip "renamed/Codename Engine-windows.zip"
+          mkdir -p renamed/assets
+          cp -r update_assets_temp/extracted_assets/* renamed/assets/
 
-      - name: macOS unzip + untar + rezip
+      # Zip up the assets folder as update-assets.zip
+      - name: Create update-assets.zip
         run: |
-          mkdir -p temp_macos
-          unzip artifacts/macos/CodenameEngine.zip -d temp_macos
-          tar -xzf temp_macos/*.tar.gz -C temp_macos
-          rm temp_macos/*.tar.gz
-          zip -r "renamed/Codename Engine-macos.zip" temp_macos/*
-          mv artifacts/macos/CodenameEngine "renamed/update-macos"
+          cd renamed
+          zip -r update-assets.zip assets/
 
-      - name: Linux rename
-        run: |
-          mv artifacts/linux/CodenameEngine "renamed/update-linux"
-          mv artifacts/linux/CodenameEngine.zip "renamed/Codename Engine-linux.zip"
-
-      - name: Move update-assets
-        run: mv update-assets.zip renamed/
-
-      # -------------------------------
-      # 5. Create draft release
-      # -------------------------------
-      - name: Create Draft Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: renamed/*
-          draft: true
-          prerelease: ${{ github.event.inputs.prerelease }}
-          tag_name: ${{ github.event.inputs.tag_name }}
+      # Create GitHub Release (draft)
+      - name: Create GitHub Release (draft)
+        id: create_release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.inputs.tag_name }}
+          release_name: Release ${{ github.event.inputs.tag_name }}
+          draft: true
+          prerelease: ${{ github.event.inputs.prerelease }}
+
+      # Upload all assets + update-assets.zip
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            renamed/Codename Engine-windows.zip
+            renamed/update-windows.exe
+            renamed/Codename Engine-macos.zip
+            renamed/update-macos
+            renamed/Codename Engine-linux.zip
+            renamed/update-linux
+            renamed/update-assets.zip
