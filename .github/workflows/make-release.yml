@@ -42,8 +42,10 @@ jobs:
       - name: Rename Windows executable
         run: mv "artifacts/windows/executable/CodenameEngine.exe" "renamed/update-windows.exe"
 
-      - name: Rename Windows full build zip
-        run: mv artifacts/windows/full_build/"Codename Engine.zip" "renamed/Codename Engine-windows.zip"
+      - name: Re-zip Windows full build
+        run: |
+          cd artifacts/windows/full_build
+          zip -r ../../../renamed/Codename\ Engine-windows.zip .
 
       # --------------------
       # MACOS ARTIFACTS
@@ -68,8 +70,10 @@ jobs:
       - name: Make macOS executable executable
         run: chmod +x renamed/update-macos
 
-      - name: Rename macOS full build zip
-        run: mv artifacts/macos/full_build/"Codename Engine.zip" "renamed/Codename Engine-macos.zip"
+      - name: Re-zip macOS full build
+        run: |
+          cd artifacts/macos/full_build
+          zip -r ../../../renamed/Codename\ Engine-macos.zip .
 
       # --------------------
       # LINUX ARTIFACTS
@@ -94,8 +98,10 @@ jobs:
       - name: Make Linux executable executable
         run: chmod +x renamed/update-linux
 
-      - name: Rename Linux full build zip
-        run: mv artifacts/linux/full_build/"Codename Engine.zip" "renamed/Codename Engine-linux.zip"
+      - name: Re-zip Linux full build
+        run: |
+          cd artifacts/linux/full_build
+          zip -r ../../../renamed/Codename\ Engine-linux.zip .
 
       # --------------------
       # UPDATE-ASSETS.ZIP CREATION
