@@ -125,6 +125,8 @@ jobs:
           echo "base_release=$BASE_RELEASE" >> $GITHUB_OUTPUT
 
       - name: Download assets from base release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Downloading assets from release ${{ steps.get_base_release.outputs.base_release }}"
           gh release download "${{ steps.get_base_release.outputs.base_release }}" --repo ${{ github.repository }} --pattern "*.zip" -D update_assets_temp
