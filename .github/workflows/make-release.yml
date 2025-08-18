@@ -72,24 +72,28 @@ jobs:
         run: |
           mkdir -p renamed
 
+          # Windows
           mv artifacts/windows/executable/CodenameEngine.exe renamed/update-windows.exe
           cd artifacts/windows/full_build
-          zip -r ../../../renamed/"Codename Engine-Windows.zip" .
+          zip -r ../../../renamed/"Codename Engine-Windows.zip" *
           cd -
 
+          # macOS
           mv artifacts/macos/executable/CodenameEngine renamed/update-mac
           cd artifacts/macos/full_build
           if [ -f CodenameEngine.tar.gz ]; then
-            # either keep it as tar.gz or wrap it in a zip
+            # Keep tar.gz as-is
             cp CodenameEngine.tar.gz ../../../renamed/"Codename Engine-Mac.tar.gz"
           else
-            zip -r ../../../renamed/"Codename Engine-Mac.zip" .
+            # Zip contents at root
+            zip -r ../../../renamed/"Codename Engine-Mac.zip" *
           fi
           cd -
 
+          # Linux
           mv artifacts/linux/executable/CodenameEngine renamed/update-linux
           cd artifacts/linux/full_build
-          zip -r ../../../renamed/"Codename Engine-Linux.zip" .
+          zip -r ../../../renamed/"Codename Engine-Linux.zip" *
           cd -
 
       - name: Find Base Release
