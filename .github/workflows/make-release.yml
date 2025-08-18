@@ -4,154 +4,126 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Tag to release (e.g. v1.0.0 or v1.0.1-rc1)'
+        description: "Release name (e.g. v1.0.5 or v1.2-rc1)"
         required: true
-        type: string
       prerelease:
-        description: 'Make a prerelease?'
+        description: "Is this a prerelease?"
         required: true
         type: boolean
 
 jobs:
-  build:
+  collect-release:
+    name: Collect & Release Builds
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Create folders
-        run: mkdir -p renamed update_assets_temp
-
-      # --------------------
-      # WINDOWS ARTIFACTS
-      # --------------------
-      - name: Download Windows full build artifact
+      # Download Windows full build
+      - name: Download Windows Full Build
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: windows.yml
           name: Codename Engine
           path: artifacts/windows/full_build
 
-      - name: Download Windows executable artifact
+      # Download Windows executable only
+      - name: Download Windows Executable
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: windows.yml
           name: Codename Engine (Executable Only)
           path: artifacts/windows/executable
 
-      - name: Rename Windows executable
-        run: mv "artifacts/windows/executable/CodenameEngine.exe" "renamed/update-windows.exe"
-
-      - name: Re-zip Windows full build
-        run: |
-          cd artifacts/windows/full_build
-          zip -r ../../../renamed/Codename\ Engine-windows.zip .
-
-      # --------------------
-      # MACOS ARTIFACTS
-      # --------------------
-      - name: Download macOS full build artifact
+      # Download macOS full build
+      - name: Download macOS Full Build
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: macos.yml
           name: Codename Engine
           path: artifacts/macos/full_build
 
-      - name: Download macOS executable artifact
+      # Download macOS executable only
+      - name: Download macOS Executable
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: macos.yml
           name: Codename Engine (Executable Only)
           path: artifacts/macos/executable
 
-      - name: Rename macOS executable
-        run: mv "artifacts/macos/executable/CodenameEngine" "renamed/update-macos"
-
-      - name: Make macOS executable executable
-        run: chmod +x renamed/update-macos
-
-      - name: Re-zip macOS full build
-        run: |
-          cd artifacts/macos/full_build
-          zip -r ../../../renamed/Codename\ Engine-macos.zip .
-
-      # --------------------
-      # LINUX ARTIFACTS
-      # --------------------
-      - name: Download Linux full build artifact
+      # Download Linux full build
+      - name: Download Linux Full Build
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: linux.yml
           name: Codename Engine
           path: artifacts/linux/full_build
 
-      - name: Download Linux executable artifact
+      # Download Linux executable only
+      - name: Download Linux Executable
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: linux.yml
           name: Codename Engine (Executable Only)
           path: artifacts/linux/executable
 
-      - name: Rename Linux executable
-        run: mv "artifacts/linux/executable/CodenameEngine" "renamed/update-linux"
-
-      - name: Make Linux executable executable
-        run: chmod +x renamed/update-linux
-
-      - name: Re-zip Linux full build
+      # Rename + zip artifacts
+      - name: Prepare artifacts
         run: |
-          cd artifacts/linux/full_build
-          zip -r ../../../renamed/Codename\ Engine-linux.zip .
+          mkdir -p renamed
 
-      # --------------------
-      # UPDATE-ASSETS.ZIP CREATION
-      # --------------------
-      - name: Determine release tag for update-assets.zip base
+          # Windows
+          mv artifacts/windows/executable/CodenameEngine.exe renamed/update-windows.exe
+          zip -r "renamed/Codename Engine-windows.zip" artifacts/windows/full_build
+
+          # macOS
+          mv artifacts/macos/executable/CodenameEngine renamed/update-macos
+          zip -r "renamed/Codename Engine-macos.zip" artifacts/macos/full_build
+
+          # Linux
+          mv artifacts/linux/executable/CodenameEngine renamed/update-linux
+          zip -r "renamed/Codename Engine-linux.zip" artifacts/linux/full_build
+
+      # Find base release for assets
+      - name: Find Base Release
         id: get_base_release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Looking for base release..."
-          if [ "${{ github.event.inputs.prerelease }}" = "true" ]; then
-            LAST_PRERELEASE=$(gh release list --repo ${{ github.repository }} --limit 100 --json tagName,prerelease --jq '.[] | select(.prerelease==true) | .tagName' | head -n 1 || echo "")
-            if [ -z "$LAST_PRERELEASE" ]; then
-              BASE_RELEASE=$(gh release list --repo ${{ github.repository }} --limit 1 --json tagName --jq '.[0].tagName')
-            else
-              BASE_RELEASE=$LAST_PRERELEASE
-            fi
-          else
-            BASE_RELEASE=$(gh release list --repo ${{ github.repository }} --limit 1 --json tagName --jq '.[0].tagName')
-          fi
-          echo "base_release=$BASE_RELEASE" >> $GITHUB_OUTPUT
+          TAG="${{ github.event.inputs.tag_name }}"
 
-      - name: Download assets from base release
+          if [[ "$TAG" == *"-rc"* || "$TAG" == *"-beta"* ]]; then
+            # prerelease → fallback to latest stable release
+            BASE=$(gh release list --repo ${{ github.repository }} --exclude-pre-releases --json tagName -L 1 -q '.[0].tagName')
+          else
+            # stable release → latest stable
+            BASE=$(gh release list --repo ${{ github.repository }} --exclude-pre-releases --json tagName -L 1 -q '.[0].tagName')
+          fi
+
+          echo "Base release: $BASE"
+          echo "base_release=$BASE" >> $GITHUB_OUTPUT
+
+      # Download & repackage assets properly
+      - name: Prepare update-assets.zip
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          mkdir -p update_assets_temp renamed
           echo "Downloading assets from release ${{ steps.get_base_release.outputs.base_release }}"
-          gh release download "${{ steps.get_base_release.outputs.base_release }}" --repo ${{ github.repository }} --pattern "*.zip" -D update_assets_temp
+          gh release download "${{ steps.get_base_release.outputs.base_release }}" \
+            --repo ${{ github.repository }} \
+            --pattern "assets.zip" \
+            -D update_assets_temp
 
-      - name: Extract assets folders from zips
-        run: |
-          mkdir -p update_assets_temp/extracted_assets
-          for f in update_assets_temp/*.zip; do
-            unzip -j "$f" 'assets/*' -d update_assets_temp/extracted_assets || true
-          done
+          unzip -q update_assets_temp/assets.zip -d update_assets_temp
+          cd update_assets_temp
+          zip -r ../renamed/update-assets.zip assets
+          cd ..
 
-      - name: Recreate assets folder hierarchy
-        run: |
-          mkdir -p renamed/assets
-          cp -r update_assets_temp/extracted_assets/* renamed/assets/
-
-      - name: Create update-assets.zip
-        run: |
-          cd renamed
-          zip -r update-assets.zip assets/
-
-      # --------------------
-      # CREATE RELEASE
-      # --------------------
-      - name: Create GitHub Release (draft)
+      # Create GitHub Release (always draft, prerelease if set)
+      - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -162,6 +134,7 @@ jobs:
           draft: true
           prerelease: ${{ github.event.inputs.prerelease }}
 
+      # Upload assets to the release
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
         env:
