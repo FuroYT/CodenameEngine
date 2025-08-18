@@ -92,14 +92,22 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Looking for base release..."
-          TAG="${{ github.event.inputs.tag_name }}"
+          PRERELEASE="${{ github.event.inputs.prerelease }}"
 
-          if [[ "$TAG" == *"-rc"* || "$TAG" == *"-beta"* ]]; then
-            # prerelease → fallback to latest stable release
-            BASE=$(gh release list --repo ${{ github.repository }} --exclude-pre-releases --json tagName -L 1 -q '.[0].tagName')
+          if [[ "$PRERELEASE" == "true" ]]; then
+            # prerelease → try latest stable, fallback to prerelease
+            BASE=$(gh release list --repo ${{ github.repository }} --json tagName,isPrerelease,isDraft \
+              -L 50 -q '.[] | select(.isPrerelease==false and .isDraft==false) | .tagName' | head -n 1)
+
+            if [ -z "$BASE" ]; then
+              echo "⚠️ No stable release found, falling back to latest prerelease"
+              BASE=$(gh release list --repo ${{ github.repository }} --json tagName,isDraft \
+                -L 1 -q '.[] | select(.isDraft==false) | .tagName')
+            fi
           else
             # stable release → latest stable
-            BASE=$(gh release list --repo ${{ github.repository }} --exclude-pre-releases --json tagName -L 1 -q '.[0].tagName')
+            BASE=$(gh release list --repo ${{ github.repository }} --json tagName,isPrerelease,isDraft \
+              -L 50 -q '.[] | select(.isPrerelease==false and .isDraft==false) | .tagName' | head -n 1)
           fi
 
           echo "Base release: $BASE"
