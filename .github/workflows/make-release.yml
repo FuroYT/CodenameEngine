@@ -122,10 +122,10 @@ jobs:
           echo "Downloading assets from release ${{ steps.get_base_release.outputs.base_release }}"
           gh release download "${{ steps.get_base_release.outputs.base_release }}" \
             --repo ${{ github.repository }} \
-            --pattern "assets.zip" \
+            --pattern "update-assets.zip" \
             -D update_assets_temp
 
-          unzip -q update_assets_temp/assets.zip -d update_assets_temp
+          unzip -q update_assets_temp/update-assets.zip -d update_assets_temp
           cd update_assets_temp
           zip -r ../renamed/update-assets.zip assets
           cd ..
