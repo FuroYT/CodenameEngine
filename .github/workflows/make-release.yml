@@ -130,25 +130,17 @@ jobs:
           zip -r ../renamed/update-assets.zip assets
           cd ..
 
-      # Create GitHub Release (always draft, prerelease if set)
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.event.inputs.tag_name }}
-          release_name: Release ${{ github.event.inputs.tag_name }}
-          draft: true
-          prerelease: ${{ github.event.inputs.prerelease }}
-
-      # Upload assets to the release
-      - name: Upload Release Assets
+      # Create Draft Release & Upload Assets
+      - name: Create GitHub Release with Assets
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.event.inputs.tag_name }}
+          name: Release ${{ github.event.inputs.tag_name }}
+          draft: true
+          prerelease: ${{ github.event.inputs.prerelease }}
+          generate_release_notes: true
           files: |
             renamed/Codename Engine-windows.zip
             renamed/update-windows.exe
