@@ -1,4 +1,4 @@
-name: Collect & Release Builds
+name: Create Release Builds
 
 on:
   workflow_dispatch:
@@ -73,13 +73,24 @@ jobs:
           mkdir -p renamed
 
           mv artifacts/windows/executable/CodenameEngine.exe renamed/update-windows.exe
-          zip -r "renamed/Codename Engine-Windows.zip" artifacts/windows/full_build
+          cd artifacts/windows/full_build
+          zip -r ../../../renamed/"Codename Engine-Windows.zip" .
+          cd -
 
           mv artifacts/macos/executable/CodenameEngine renamed/update-mac
-          zip -r "renamed/Codename Engine-Mac.zip" artifacts/macos/full_build
+          cd artifacts/macos/full_build
+          if [ -f CodenameEngine.tar.gz ]; then
+            # either keep it as tar.gz or wrap it in a zip
+            cp CodenameEngine.tar.gz ../../../renamed/"Codename Engine-Mac.tar.gz"
+          else
+            zip -r ../../../renamed/"Codename Engine-Mac.zip" .
+          fi
+          cd -
 
           mv artifacts/linux/executable/CodenameEngine renamed/update-linux
-          zip -r "renamed/Codename Engine-Linux.zip" artifacts/linux/full_build
+          cd artifacts/linux/full_build
+          zip -r ../../../renamed/"Codename Engine-Linux.zip" .
+          cd -
 
       - name: Find Base Release
         id: get_base_release
