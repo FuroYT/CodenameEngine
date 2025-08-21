@@ -3,6 +3,7 @@ package funkin.editors.charter;
 import flixel.math.FlxPoint;
 import funkin.backend.chart.ChartData.ChartMetaData;
 import funkin.editors.extra.PropertyButton;
+import funkin.game.HealthIcon;
 
 using StringTools;
 
@@ -15,16 +16,15 @@ class CharterMetaDataScreen extends UISubstateWindow {
 	public var bpmStepper:UINumericStepper;
 	public var beatsPerMeasureStepper:UINumericStepper;
 	public var stepsPerBeatStepper :UINumericStepper;
-	public var needsVoicesCheckbox:UICheckbox;
 	public var customPropertiesButtonList:UIButtonList<PropertyButton>;
 
 	public var displayNameTextBox:UITextBox;
 	public var iconTextBox:UITextBox;
-	public var iconSprite:FlxSprite;
+	public var iconSprite:HealthIcon;
 	public var opponentModeCheckbox:UICheckbox;
 	public var coopAllowedCheckbox:UICheckbox;
 	public var colorWheel:UIColorwheel;
-	public var difficulitesTextBox:UITextBox;
+	public var difficultiesTextBox:UITextBox;
 
 	public function new(metadata:ChartMetaData) {
 		super();
@@ -65,11 +65,6 @@ class CharterMetaDataScreen extends UISubstateWindow {
 		stepsPerBeatStepper = new UINumericStepper(beatsPerMeasureStepper.x + 30 + 24, beatsPerMeasureStepper.y, metadata.stepsPerBeat, 1, 0, 1, null, 54);
 		add(stepsPerBeatStepper);
 
-		needsVoicesCheckbox = new UICheckbox(stepsPerBeatStepper.x + 80 + 26, stepsPerBeatStepper.y, "Voices", metadata.needsVoices);
-		add(needsVoicesCheckbox);
-		addLabelOn(needsVoicesCheckbox, "Needs Voices");
-		needsVoicesCheckbox.y += 6; needsVoicesCheckbox.x += 4;
-
 		add(title = new UIText(songNameTextBox.x, songNameTextBox.y + 10 + 46, 0, "Menus Data (Freeplay/Story)", 28));
 
 		displayNameTextBox = new UITextBox(title.x, title.y + title.height + 36, metadata.displayName);
@@ -90,15 +85,15 @@ class CharterMetaDataScreen extends UISubstateWindow {
 		coopAllowedCheckbox = new UICheckbox(opponentModeCheckbox.x + 150 + 26, opponentModeCheckbox.y, "Co-op Mode", metadata.coopAllowed);
 		add(coopAllowedCheckbox);
 
-		colorWheel = new UIColorwheel(iconTextBox.x, coopAllowedCheckbox.y, metadata.parsedColor);
+		colorWheel = new UIColorwheel(iconTextBox.x, coopAllowedCheckbox.y, metadata.color);
 		add(colorWheel);
 		addLabelOn(colorWheel, "Color");
 
-		difficulitesTextBox = new UITextBox(opponentModeCheckbox.x, opponentModeCheckbox.y + 6 + 32 + 26, metadata.difficulties.join(", "));
-		add(difficulitesTextBox);
-		addLabelOn(difficulitesTextBox, "Difficulties");
+		difficultiesTextBox = new UITextBox(opponentModeCheckbox.x, opponentModeCheckbox.y + 6 + 32 + 26, metadata.difficulties.join(", "));
+		add(difficultiesTextBox);
+		addLabelOn(difficultiesTextBox, "Difficulties");
 
-		customPropertiesButtonList = new UIButtonList<PropertyButton>(needsVoicesCheckbox.x + needsVoicesCheckbox.width + 105, songNameTextBox.y, 290, 316, '', FlxPoint.get(280, 35), null, 5);
+		customPropertiesButtonList = new UIButtonList<PropertyButton>(stepsPerBeatStepper.x + 80 + 26 + 105, songNameTextBox.y, 290, 316, '', FlxPoint.get(280, 35), null, 5);
 		customPropertiesButtonList.frames = Paths.getFrames('editors/ui/inputbox');
 		customPropertiesButtonList.cameraSpacing = 0;
 		customPropertiesButtonList.addButton.callback = function() {
@@ -130,22 +125,14 @@ class CharterMetaDataScreen extends UISubstateWindow {
 	}
 
 	function updateIcon(icon:String) {
-		if (iconSprite == null) add(iconSprite = new FlxSprite());
+		if (iconSprite == null) add(iconSprite = new HealthIcon());
 
-		if (iconSprite.animation.exists(icon)) return;
-		@:privateAccess iconSprite.animation.clearAnimations();
-
-		var path:String = Paths.image('icons/$icon');
-		if (!Assets.exists(path)) path = Paths.image('icons/face');
-
-		iconSprite.loadGraphic(path, true, 150, 150);
-		iconSprite.animation.add(icon, [0], 0, false);
-		iconSprite.antialiasing = true;
-		iconSprite.animation.play(icon);
-
-		iconSprite.scale.set(0.5, 0.5);
+		iconSprite.setIcon(icon);
+		var size = Std.int(150 * 0.5);
+		iconSprite.setUnstretchedGraphicSize(size, size, true);
 		iconSprite.updateHitbox();
-		iconSprite.setPosition(iconTextBox.x + 150 + 8, (iconTextBox.y + 16) - (iconSprite.height/2));
+		iconSprite.setPosition(iconTextBox.x + iconTextBox.bWidth + 8, iconTextBox.y + (iconTextBox.bHeight / 2) - (iconSprite.height / 2));
+		iconSprite.scrollFactor.set(1, 1);
 	}
 
 	public function saveMeta() {
@@ -162,14 +149,12 @@ class CharterMetaDataScreen extends UISubstateWindow {
 			bpm: bpmStepper.value,
 			beatsPerMeasure: Std.int(beatsPerMeasureStepper.value),
 			stepsPerBeat: Std.int(stepsPerBeatStepper.value),
-			needsVoices: needsVoicesCheckbox.checked,
 			displayName: displayNameTextBox.label.text,
 			icon: iconTextBox.label.text,
-			color: colorWheel.curColorString,
-			parsedColor: colorWheel.curColor,
+			color: colorWheel.curColor,
 			opponentModeAllowed: opponentModeCheckbox.checked,
 			coopAllowed: coopAllowedCheckbox.checked,
-			difficulties: [for (diff in difficulitesTextBox.label.text.split(",")) diff.trim()],
+			difficulties: [for (diff in difficultiesTextBox.label.text.split(",")) diff.trim()],
 			customValues: customVals,
 		};
 

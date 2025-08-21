@@ -1,7 +1,7 @@
 package funkin.editors;
 
-import funkin.editors.ui.*;
 import flixel.tweens.FlxTween;
+import funkin.editors.ui.*;
 
 class UIDebugState extends UIState {
 	public override function create() {

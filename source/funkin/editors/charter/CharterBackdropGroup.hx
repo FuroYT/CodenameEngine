@@ -1,9 +1,9 @@
 package funkin.editors.charter;
 
+import flixel.addons.display.FlxBackdrop;
 import flixel.graphics.FlxGraphic;
 import funkin.backend.system.Conductor;
 import openfl.geom.Rectangle;
-import flixel.addons.display.FlxBackdrop;
 
 class CharterBackdropGroup extends FlxTypedGroup<CharterBackdrop> {
 	public var strumLineGroup:CharterStrumLineGroup;

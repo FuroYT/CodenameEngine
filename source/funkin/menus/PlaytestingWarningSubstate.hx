@@ -1,11 +1,11 @@
 package funkin.menus;
 
-import flixel.tweens.FlxTween;
-import funkin.editors.ui.UIWarningSubstate.WarningButton;
-import flixel.util.FlxColor;
 import flixel.text.FlxText.FlxTextFormat;
 import flixel.text.FlxText.FlxTextFormatMarkerPair;
+import flixel.tweens.FlxTween;
+import flixel.util.FlxColor;
 import funkin.backend.FunkinText;
+import funkin.editors.ui.UIWarningSubstate.WarningButton;
 
 class PlaytestingWarningSubstate extends MusicBeatSubstate
 {

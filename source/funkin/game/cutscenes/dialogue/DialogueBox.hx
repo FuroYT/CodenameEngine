@@ -1,20 +1,16 @@
 package funkin.game.cutscenes.dialogue;
 
-import funkin.backend.scripting.events.dialogue.*;
-import funkin.backend.scripting.events.PlayAnimEvent;
-import funkin.backend.scripting.events.PlayAnimEvent.PlayAnimContext;
-import funkin.backend.scripting.events.CancellableEvent;
-import funkin.backend.scripting.Script;
-import flixel.sound.FlxSound;
 import flixel.addons.text.FlxTypeText;
-import flixel.math.FlxPoint;
-import flixel.util.FlxColor;
+import flixel.sound.FlxSound;
+import funkin.backend.scripting.Script;
+import funkin.backend.scripting.events.sprite.*;
+import funkin.backend.scripting.events.dialogue.*;
 import haxe.xml.Access;
 
 class DialogueBox extends FunkinSprite {
 	public var dialogueBoxData:Access;
 	public var positions:Map<String, CharPosDef> = [];
-	public var dialogueEnded:Bool = false;  // Using text._typing is also fair but it doesnt check for eventual opening anims!  - Nex
+	public var dialogueEnded:Bool = false;  // Using text._typing is also fair but it doesn't check for eventual opening anims!  - Nex
 
 	public var nextSFX:String = Paths.sound('dialogue/next');
 	public var defaultTextTypeSFX:Array<FlxSound>;
@@ -26,7 +22,7 @@ class DialogueBox extends FunkinSprite {
 
 	public function new(name:String) {
 		super();
-		var textTypeSFX:String = Paths.sound('dialogue/text');  // Default if xml doesnt have it  - Nex
+		var textTypeSFX:String = Paths.sound('dialogue/text');  // Default if xml doesn't have it  - Nex
 
 		dialogueBoxScript = Script.create(Paths.script('data/' + defPath + name));
 		dialogueBoxScript.setParent(this);
@@ -90,8 +86,11 @@ class DialogueBox extends FunkinSprite {
 			}
 		} catch(e) {
 			active = false;
-			Logs.trace('Couldn\'t load dialogue box "$name": ${e.toString()}', ERROR);
+			var message:String = e.toString();
+			Logs.trace('Couldn\'t load dialogue box "$name": $message', ERROR, RED);
+			dialogueBoxScript.call("loadingError", [message]);
 		}
+
 		defaultTextTypeSFX = [FlxG.sound.load(textTypeSFX)];
 		FlxG.sound.cache(nextSFX);
 		dialogueBoxScript.call("postCreate");

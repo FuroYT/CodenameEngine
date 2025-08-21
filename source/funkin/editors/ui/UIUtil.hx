@@ -5,7 +5,7 @@ import funkin.editors.ui.UIContextMenu.UIContextMenuOption;
 
 class UIUtil {
 	public static function follow(spr:FlxSprite, target:FlxSprite, x:Float = 0, y:Float = 0) {
-		spr.cameras = target is UISprite ? cast(target, UISprite).__lastDrawCameras : target.cameras;
+		spr.cameras = target is UISprite ? ({var _:UISprite = cast target;_;}).__lastDrawCameras : target.cameras;
 		spr.setPosition(target.x + x, target.y + y);
 		spr.scrollFactor.set(target.scrollFactor.x, target.scrollFactor.y);
 	}
@@ -15,7 +15,7 @@ class UIUtil {
 	}
 
 	/**
-	 * Process all options with shortcuts present in a `Array<UIContextMenuOption>`. Also checks childrens.
+	 * Process all options with shortcuts present in a `Array<UIContextMenuOption>`. Also checks children.
 	 * @param topMenuOptions
 	 */
 	public static function processShortcuts(topMenuOptions:Array<UIContextMenuOption>) {

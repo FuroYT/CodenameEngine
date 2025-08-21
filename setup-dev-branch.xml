@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<libraries>
+	<if cond="time-fix">
+		<print pretty="true">Switching to branch 'time-fix'...</print>
+		<!-- <cmd inLib="lime" cmd="git checkout time-fix" /> -->
+		<cmd inLib="openfl" cmd="git checkout time-fix" />
+		<cmd inLib="away3d" cmd="git checkout time-fix" />
+		<cmd inLib="flixel" cmd="git checkout time-fix" />
+		<cmd inLib="flixel-addons" cmd="git checkout time-fix" />
+		<print pretty="true">Done!&#10;Make sure to switch the branch on Codename Engine to 'time-fix' before compiling!</print>
+	</if>
+
+	<if cond="normal">
+		<print pretty="true">Switching to branch 'dev'...</print>
+		<!-- <cmd inLib="lime" cmd="git checkout develop" /> -->
+		<cmd inLib="openfl" cmd="git checkout develop" />
+		<cmd inLib="away3d" cmd="git checkout master" />
+		<cmd inLib="flixel" cmd="git checkout dev" />
+		<cmd inLib="flixel-addons" cmd="git checkout dev" />
+		<print pretty="true">Done!&#10;Make sure to switch the branch on Codename Engine to 'main' before compiling!</print>
+	</if>
+
+	<!-- <print pretty="true">Rebuilding Lime...</print> -->
+	<!-- <cmd inLib="lime" cmd="haxelib run lime rebuild . $PLATFORM -clean" /> -->
+	<!-- <cmd inLib="lime" dir="tools" cmd="haxe tools.hxml" /> -->
+</libraries>

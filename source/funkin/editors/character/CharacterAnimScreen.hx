@@ -1,7 +1,7 @@
 package funkin.editors.character;
 
-import flixel.math.FlxPoint;
 import flixel.animation.FlxAnimation;
+import flixel.math.FlxPoint;
 import funkin.backend.utils.XMLUtil.AnimData;
 
 class CharacterAnimScreen extends UISubstateWindow {

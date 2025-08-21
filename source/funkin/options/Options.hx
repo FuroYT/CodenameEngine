@@ -1,9 +1,13 @@
 package funkin.options;
 
-import openfl.Lib;
-import flixel.util.FlxSave;
 import flixel.input.keyboard.FlxKey;
+import flixel.util.FlxSave;
+import openfl.Lib;
 
+/**
+ * The save data of the engine.
+ * Mod save data is stored in `FlxG.save.data`.
+**/
 @:build(funkin.backend.system.macros.OptionsMacro.build())
 @:build(funkin.backend.system.macros.FunkinSaveMacro.build("__save", "__flush", "__load"))
 class Options
@@ -29,6 +33,7 @@ class Options
 	public static var gameplayShaders:Bool = true;
 	public static var colorHealthBar:Bool = true;
 	public static var lowMemoryMode:Bool = false;
+	public static var devMode:Bool = false;
 	public static var betaUpdates:Bool = false;
 	public static var splashesEnabled:Bool = true;
 	public static var hitWindow:Float = 250;
@@ -51,7 +56,7 @@ class Options
 	 */
 	public static var freeplayLastSong:String = null;
 	public static var freeplayLastDifficulty:String = "normal";
-	public static var contributors:Array<funkin.backend.system.github.GitHubContributor> = [];
+	public static var contributors:Array<funkin.backend.system.github.GitHubContributor.CreditsGitHubContributor> = [];
 	public static var mainDevs:Array<Int> = [];  // IDs
 	public static var lastUpdated:Null<Float>;
 
@@ -66,15 +71,19 @@ class Options
 	public static var charterAutoSaves:Bool = true;
 	public static var charterAutoSaveTime:Float = 60*5;
 	public static var charterAutoSaveWarningTime:Float = 5;
-	public static var charterAutoSavesSeperateFolder:Bool = false;
+	public static var charterAutoSavesSeparateFolder:Bool = false;
 
 	/**
-	 * PLAYER 1 CONTROLS
-	 */
+	* PLAYER 1 CONTROLS
+	*/
+
+	// Notes
 	public static var P1_NOTE_LEFT:Array<FlxKey> = [A];
 	public static var P1_NOTE_DOWN:Array<FlxKey> = [S];
 	public static var P1_NOTE_UP:Array<FlxKey> = [W];
 	public static var P1_NOTE_RIGHT:Array<FlxKey> = [D];
+
+	// Menus
 	public static var P1_LEFT:Array<FlxKey> = [A];
 	public static var P1_DOWN:Array<FlxKey> = [S];
 	public static var P1_UP:Array<FlxKey> = [W];
@@ -82,16 +91,30 @@ class Options
 	public static var P1_ACCEPT:Array<FlxKey> = [ENTER];
 	public static var P1_BACK:Array<FlxKey> = [BACKSPACE];
 	public static var P1_PAUSE:Array<FlxKey> = [ENTER];
+
+	// Misc
 	public static var P1_RESET:Array<FlxKey> = [R];
 	public static var P1_SWITCHMOD:Array<FlxKey> = [TAB];
+	public static var P1_VOLUME_UP:Array<FlxKey> = [];
+	public static var P1_VOLUME_DOWN:Array<FlxKey> = [];
+	public static var P1_VOLUME_MUTE:Array<FlxKey> = [];
+
+	// Debugs
+	public static var P1_DEV_ACCESS:Array<FlxKey> = [SEVEN];
+	public static var P1_DEV_CONSOLE:Array<FlxKey> = [F2];
+	public static var P1_DEV_RELOAD:Array<FlxKey> = [F5];
 
 	/**
-	 * PLAYER 2 CONTROLS (ALT)
-	 */
+	* PLAYER 2 CONTROLS (ALT)
+	*/
+
+	// Notes
 	public static var P2_NOTE_LEFT:Array<FlxKey> = [LEFT];
 	public static var P2_NOTE_DOWN:Array<FlxKey> = [DOWN];
 	public static var P2_NOTE_UP:Array<FlxKey> = [UP];
 	public static var P2_NOTE_RIGHT:Array<FlxKey> = [RIGHT];
+
+	// Menus
 	public static var P2_LEFT:Array<FlxKey> = [LEFT];
 	public static var P2_DOWN:Array<FlxKey> = [DOWN];
 	public static var P2_UP:Array<FlxKey> = [UP];
@@ -99,16 +122,30 @@ class Options
 	public static var P2_ACCEPT:Array<FlxKey> = [SPACE];
 	public static var P2_BACK:Array<FlxKey> = [ESCAPE];
 	public static var P2_PAUSE:Array<FlxKey> = [ESCAPE];
+
+	// Misc
 	public static var P2_RESET:Array<FlxKey> = [];
 	public static var P2_SWITCHMOD:Array<FlxKey> = [];
+	public static var P2_VOLUME_UP:Array<FlxKey> = [NUMPADPLUS];
+	public static var P2_VOLUME_DOWN:Array<FlxKey> = [NUMPADMINUS];
+	public static var P2_VOLUME_MUTE:Array<FlxKey> = [NUMPADZERO];
+
+	// Debugs
+	public static var P2_DEV_ACCESS:Array<FlxKey> = [];
+	public static var P2_DEV_CONSOLE:Array<FlxKey> = [];
+	public static var P2_DEV_RELOAD:Array<FlxKey> = [];
 
 	/**
-	 * SOLO GETTERS
-	 */
+	* SOLO GETTERS
+	*/
+
+	// Notes
 	public static var SOLO_NOTE_LEFT(get, null):Array<FlxKey>;
 	public static var SOLO_NOTE_DOWN(get, null):Array<FlxKey>;
 	public static var SOLO_NOTE_UP(get, null):Array<FlxKey>;
 	public static var SOLO_NOTE_RIGHT(get, null):Array<FlxKey>;
+
+	// Menus
 	public static var SOLO_LEFT(get, null):Array<FlxKey>;
 	public static var SOLO_DOWN(get, null):Array<FlxKey>;
 	public static var SOLO_UP(get, null):Array<FlxKey>;
@@ -116,8 +153,18 @@ class Options
 	public static var SOLO_ACCEPT(get, null):Array<FlxKey>;
 	public static var SOLO_BACK(get, null):Array<FlxKey>;
 	public static var SOLO_PAUSE(get, null):Array<FlxKey>;
+
+	// Misc
 	public static var SOLO_RESET(get, null):Array<FlxKey>;
 	public static var SOLO_SWITCHMOD(get, null):Array<FlxKey>;
+	public static var SOLO_VOLUME_UP(get, null):Array<FlxKey>;
+	public static var SOLO_VOLUME_DOWN(get, null):Array<FlxKey>;
+	public static var SOLO_VOLUME_MUTE(get, null):Array<FlxKey>;
+
+	// Debugs
+	public static var SOLO_DEV_ACCESS(get, null):Array<FlxKey>;
+	public static var SOLO_DEV_CONSOLE(get, null):Array<FlxKey>;
+	public static var SOLO_DEV_RELOAD(get, null):Array<FlxKey>;
 
 	public static function load() {
 		if (__save == null) __save = new FlxSave();
@@ -146,6 +193,10 @@ class Options
 		PlayerSettings.solo.setKeyboardScheme(Solo);
 		PlayerSettings.player1.setKeyboardScheme(Duo(true));
 		PlayerSettings.player2.setKeyboardScheme(Duo(false));
+
+		FlxG.sound.volumeUpKeys = SOLO_VOLUME_UP;
+		FlxG.sound.volumeDownKeys = SOLO_VOLUME_DOWN;
+		FlxG.sound.muteKeys = SOLO_VOLUME_MUTE;
 	}
 
 	public static function save() {

@@ -1,7 +1,7 @@
 package funkin.backend.utils;
 
-import funkin.backend.scripting.Script;
 import funkin.backend.scripting.MultiThreadedScript;
+import funkin.backend.scripting.Script;
 
 class EngineUtil {
 	/**

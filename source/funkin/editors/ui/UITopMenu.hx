@@ -21,9 +21,12 @@ class UITopMenu extends UISliceSprite {
 
 	public override function update(elapsed:Float) {
 		anyMenuOpened = false;
-		for(c in members) if (cast(c, UITopMenuButton).curMenu.contextMenuOpened()) {
-			anyMenuOpened = true;
-			break;
+		for(c in members) {
+			var c:UITopMenuButton = cast c;
+			if (c.curMenu.contextMenuOpened()) {
+				anyMenuOpened = true;
+				break;
+			}
 		}
 
 		super.update(elapsed);

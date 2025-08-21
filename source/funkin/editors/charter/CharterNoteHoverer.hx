@@ -47,7 +47,7 @@ class CharterNoteHoverer extends CharterNote {
 
 					for (s in Charter.selection) {
 						if (s != null && s.draggable && s is CharterNote) {
-							var draggingNote:CharterNote = cast(s, CharterNote);
+							var draggingNote:CharterNote = cast s;
 							y = (draggingNote.step + verticalChange);
 							if (!FlxG.keys.pressed.SHIFT)
 								y -= ((draggingNote.step + verticalChange)

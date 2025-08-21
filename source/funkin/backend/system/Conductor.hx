@@ -1,9 +1,9 @@
 package funkin.backend.system;
 
-import funkin.backend.chart.ChartData;
 import flixel.FlxState;
-import funkin.backend.system.interfaces.IBeatReceiver;
 import flixel.util.FlxSignal.FlxTypedSignal;
+import funkin.backend.chart.ChartData;
+import funkin.backend.system.interfaces.IBeatReceiver;
 
 typedef BPMChangeEvent =
 {
@@ -38,14 +38,14 @@ class Conductor
 	public static var stepCrochet:Float = crochet / 4; // steps in milliseconds
 
 	/**
-	 * Number of beats per mesure (top number in time signature). Defaults to 4.
+	 * Number of beats per measure (top number in time signature). Defaults to 4.
 	 */
 	public static var beatsPerMeasure:Float = 4;
 
 	/**
 	 * Number of steps per beat (bottom number in time signature). Defaults to 4.
 	 */
-	public static var stepsPerBeat:Float = 4;
+	public static var stepsPerBeat:Int = 4;
 
 
 	/**
@@ -181,12 +181,16 @@ class Conductor
 	private static var __updateMeasure:Bool;
 
 	private static function update() {
-		if (FlxG.state != null && FlxG.state is MusicBeatState && cast(FlxG.state, MusicBeatState).cancelConductorUpdate) return;
+		if (FlxG.state != null && FlxG.state is MusicBeatState) {
+			var state:MusicBeatState = cast FlxG.state;
+			if(state.cancelConductorUpdate)
+				return;
+		}
 
 		__updateSongPos(FlxG.elapsed);
 
 		if (bpm > 0) {
-			// updates curbeat and stuff
+			// updates curBeat and stuff
 			__lastChange = {
 				stepTime: 0,
 				songTime: 0,
@@ -233,7 +237,7 @@ class Conductor
 					var state = FlxG.state;
 					while(state != null) {
 						if (state is IBeatReceiver && (state.subState == null || state.persistentUpdate)) {
-							var st = cast(state, IBeatReceiver);
+							var st:IBeatReceiver = cast state;
 							if (curStep > oldStep) {
 								for(i in oldStep...curStep) {
 									st.stepHit(i+1);
@@ -258,7 +262,7 @@ class Conductor
 		}
 	}
 
-	public static function changeBPM(newBpm:Float, beatsPerMeasure:Float = 4, stepsPerBeat:Float = 4)
+	public static function changeBPM(newBpm:Float, beatsPerMeasure:Float = 4, stepsPerBeat:Int = 4)
 	{
 		bpm = newBpm;
 

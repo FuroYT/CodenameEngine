@@ -1,7 +1,7 @@
 package funkin.backend.utils;
 
-import openfl.display.BitmapData;
 import flixel.util.FlxColor;
+import openfl.display.BitmapData;
 
 class BitmapUtil {
 	/**

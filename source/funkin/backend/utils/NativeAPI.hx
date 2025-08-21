@@ -35,9 +35,9 @@ class NativeAPI {
 	/**
 	 * Gets the specified file's (or folder) attributes.
 	 */
-	public static function getFileAttributesRaw(path:String, useAbsol:Bool = true):Int {
+	public static function getFileAttributesRaw(path:String, useAbsolute:Bool = true):Int {
 		#if windows
-		if(useAbsol) path = sys.FileSystem.absolutePath(path);
+		if(useAbsolute) path = sys.FileSystem.absolutePath(path);
 		return Windows.getFileAttributes(path);
 		#else
 		return -1;
@@ -47,16 +47,16 @@ class NativeAPI {
 	/**
 	 * Gets the specified file's (or folder) attributes and passes it to `FileAttributeWrapper`.
 	 */
-	public static function getFileAttributes(path:String, useAbsol:Bool = true):FileAttributeWrapper {
-		return new FileAttributeWrapper(getFileAttributesRaw(path, useAbsol));
+	public static function getFileAttributes(path:String, useAbsolute:Bool = true):FileAttributeWrapper {
+		return new FileAttributeWrapper(getFileAttributesRaw(path, useAbsolute));
 	}
 
 	/**
 	 * Sets the specified file's (or folder) attributes. If it fails, the return value is `0`.
 	 */
-	public static function setFileAttributes(path:String, attrib:OneOfThree<NativeAPI.FileAttribute, FileAttributeWrapper, Int>, useAbsol:Bool = true):Int {
+	public static function setFileAttributes(path:String, attrib:OneOfThree<NativeAPI.FileAttribute, FileAttributeWrapper, Int>, useAbsolute:Bool = true):Int {
 		#if windows
-		if(useAbsol) path = sys.FileSystem.absolutePath(path);
+		if(useAbsolute) path = sys.FileSystem.absolutePath(path);
 		return Windows.setFileAttributes(path, attrib is FileAttributeWrapper ? cast(attrib, FileAttributeWrapper).getValue() : cast(attrib, Int));
 		#else
 		return 0;
@@ -66,9 +66,9 @@ class NativeAPI {
 	/**
 	 * Removes from the specified file's (or folder) one (or more) specific attribute.
 	 */
-	public static function addFileAttributes(path:String, attrib:OneOfTwo<NativeAPI.FileAttribute, Int>, useAbsol:Bool = true):Int {
+	public static function addFileAttributes(path:String, attrib:OneOfTwo<NativeAPI.FileAttribute, Int>, useAbsolute:Bool = true):Int {
 		#if windows
-		return setFileAttributes(path, getFileAttributesRaw(path, useAbsol) | cast(attrib, Int), useAbsol);
+		return setFileAttributes(path, getFileAttributesRaw(path, useAbsolute) | cast(attrib, Int), useAbsolute);
 		#else
 		return 0;
 		#end
@@ -77,9 +77,9 @@ class NativeAPI {
 	/**
 	 * Removes from the specified file's (or folder) one (or more) specific attribute.
 	 */
-	public static function removeFileAttributes(path:String, attrib:OneOfTwo<NativeAPI.FileAttribute, Int>, useAbsol:Bool = true):Int {
+	public static function removeFileAttributes(path:String, attrib:OneOfTwo<NativeAPI.FileAttribute, Int>, useAbsolute:Bool = true):Int {
 		#if windows
-		return setFileAttributes(path, getFileAttributesRaw(path, useAbsol) & ~cast(attrib, Int), useAbsol);
+		return setFileAttributes(path, getFileAttributesRaw(path, useAbsolute) & ~cast(attrib, Int), useAbsolute);
 		#else
 		return 0;
 		#end
@@ -188,8 +188,8 @@ class NativeAPI {
 		if(backgroundColor == NONE)
 			backgroundColor = BLACK;
 
-		var fg = cast(foregroundColor, Int);
-		var bg = cast(backgroundColor, Int);
+		var fg:Int = cast foregroundColor;
+		var bg:Int = cast backgroundColor;
 		Windows.setConsoleColors((bg * 16) + fg);
 		#elseif sys
 		Sys.print("\x1b[0m");

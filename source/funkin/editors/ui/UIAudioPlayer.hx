@@ -1,13 +1,13 @@
 package funkin.editors.ui;
 
 import flixel.math.FlxRect;
-import flixel.util.FlxColor;
-import flixel.ui.FlxBar;
 import flixel.sound.FlxSound;
+import flixel.ui.FlxBar;
+import flixel.util.FlxColor;
+import flixel.util.FlxStringUtil;
 import haxe.io.Bytes;
 import lime.media.AudioBuffer;
 import openfl.media.Sound;
-import flixel.util.FlxStringUtil;
 
 using flixel.util.FlxSpriteUtil;
 
@@ -54,6 +54,7 @@ class UIAudioPlayer extends UIButton {
 		timeBarPlayer = new FlxSprite(timeBar.x, timeBar.y).loadGraphic(Paths.image('editors/ui/audio-time-empty'));
 		timeBarPlayer.colorTransform.color = 0x440364;
 		timeBarPlayer.scale.y = (timeBarPlayer.frameHeight + 2) / timeBarPlayer.frameHeight;
+		timeBarPlayer.pixelPerfectRender = true;
 		members.push(timeBarPlayer);
 
 		timeBarSpr = cast new UISprite(timeBar.x, timeBar.y).makeSolid(timeBar.barWidth, timeBar.barHeight, 0x00FFFFFF);
@@ -87,13 +88,13 @@ class UIAudioPlayer extends UIButton {
 			playingSprite.animation.play(sound.playing ? "playing" : "paused");
 			timeText.text = '${FlxStringUtil.formatTime(sound.time/1000, true)} / ${FlxStringUtil.formatTime(sound.length/1000)}';
 
-			if(timeBarPlayer.clipRect == null)
-				timeBarPlayer.clipRect = new FlxRect(0, 0, timeBarPlayer.frameWidth, timeBarPlayer.frameHeight);
+			if(timeBarPlayer.rawClipRect == null)
+				timeBarPlayer.rawClipRect = new FlxRect(0, 0, timeBarPlayer.frameWidth, timeBarPlayer.frameHeight);
 
-			timeBarPlayer.clipRect.x = timeBarPlayer.frameWidth * (sound.time/sound.length);
-			timeBarPlayer.clipRect.width = 2;
+			timeBarPlayer.rawClipRect.x = timeBarPlayer.frameWidth * (sound.time/sound.length);
+			timeBarPlayer.rawClipRect.width = 2;
 
-			timeBarPlayer.clipRect = timeBarPlayer.clipRect;
+			timeBarPlayer.rawClipRect = timeBarPlayer.rawClipRect;
 
 			nextPlayerColor = sound.playing ? 0x732D95 : 0x440364;
 			timeBarPlayer.colorTransform.color = FlxColor.interpolate(timeBarPlayer.colorTransform.color, nextPlayerColor, 1/14);

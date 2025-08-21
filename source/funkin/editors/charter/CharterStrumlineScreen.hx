@@ -1,10 +1,9 @@
 package funkin.editors.charter;
 
 import flixel.math.FlxPoint;
-import funkin.game.Note;
+import funkin.backend.chart.ChartData.ChartStrumLine;
 import funkin.game.Character;
 import funkin.game.HealthIcon;
-import funkin.backend.chart.ChartData.ChartStrumLine;
 
 class CharterStrumlineScreen extends UISubstateWindow {
 	public var strumLineID:Int = -1;
@@ -19,7 +18,7 @@ class CharterStrumlineScreen extends UISubstateWindow {
 	public var hudYStepper:UINumericStepper;
 	public var visibleCheckbox:UICheckbox;
 	public var scrollSpeedStepper:UINumericStepper;
-	public var usesChartscrollSpeed:UICheckbox;
+	public var usesChartScrollSpeed:UICheckbox;
 
 	public var characterIcons:Array<HealthIcon> = [];
 
@@ -40,7 +39,7 @@ class CharterStrumlineScreen extends UISubstateWindow {
 
 		if (creatingStrumLine)
 			strumLine = {
-				characters: ["dad"],
+				characters: [Flags.DEFAULT_OPPONENT],
 				type: OPPONENT,
 				notes: [],
 				position: "dad",
@@ -79,8 +78,8 @@ class CharterStrumlineScreen extends UISubstateWindow {
 		add(typeDropdown);
 		addLabelOn(typeDropdown, "Type");
 
-		usesChartscrollSpeed = new UICheckbox(typeDropdown.x + 104, typeDropdown.y + 135, "Uses charts scroll speed?", strumLine.scrollSpeed == null);
-		usesChartscrollSpeed.onChecked = function(b) {
+		usesChartScrollSpeed = new UICheckbox(typeDropdown.x + 104, typeDropdown.y + 135, "Uses charts scroll speed?", strumLine.scrollSpeed == null);
+		usesChartScrollSpeed.onChecked = function(b) {
 			if(b)
 			{
 				scrollSpeedStepper.value = PlayState.SONG.scrollSpeed;
@@ -89,10 +88,10 @@ class CharterStrumlineScreen extends UISubstateWindow {
 				scrollSpeedStepper.selectable = true;
 			}
 		}
-		add(usesChartscrollSpeed);
+		add(usesChartScrollSpeed);
 
-		scrollSpeedStepper = new UINumericStepper(typeDropdown.x, typeDropdown.y + 128, usesChartscrollSpeed.checked ? PlayState.SONG.scrollSpeed : strumLine.scrollSpeed, 0.1, 2, 0, 10, 82);
-		if(usesChartscrollSpeed.checked)
+		scrollSpeedStepper = new UINumericStepper(typeDropdown.x, typeDropdown.y + 128, usesChartScrollSpeed.checked ? PlayState.SONG.scrollSpeed : strumLine.scrollSpeed, 0.1, 2, 0, 10, 82);
+		if(usesChartScrollSpeed.checked)
 		{
 			scrollSpeedStepper.selectable = false;
 		} else {
@@ -142,21 +141,20 @@ class CharterStrumlineScreen extends UISubstateWindow {
 		add(closeButton);
 		closeButton.color = 0xFFFF0000;
 
-		var suffixlist = ["NONE"];
+		var suffixList = ["NONE"];
 		for (i in Paths.getFolderContent('songs/${Charter.__song.toLowerCase()}/song'))
 		if (i.startsWith("Voices")) {
 			i = haxe.io.Path.withoutExtension(i.substr("Voices".length));
 			if (i == "") continue;
 			for (j in PlayState.SONG.meta.difficulties) {
-				if (i.endsWith('-${j.toLowerCase()}')) {
-					if (suffixlist.contains(i.substring(0, i.length - j.length))) continue;
-					else suffixlist.push(i.substring(0, i.length - j.length));
-				}
-				else if (!suffixlist.contains(i)) suffixlist.push(i);
+				if (i.endsWith('-${j.toLowerCase()}'))
+					suffixList.pushOnce(i.substring(0, i.length - j.length));
+				else
+					suffixList.pushOnce(i);
 			}
 		}
 
-		vocalsSuffixDropDown = new UIDropDown(typeDropdown.x, hudScaleStepper.y + 128, 200, 32, suffixlist, strumLine.vocalsSuffix != null && strumLine.vocalsSuffix != "" ? suffixlist.indexOf(strumLine.vocalsSuffix) : 0);
+		vocalsSuffixDropDown = new UIDropDown(typeDropdown.x, hudScaleStepper.y + 128, 200, 32, suffixList, strumLine.vocalsSuffix != null && strumLine.vocalsSuffix != "" ? suffixList.indexOf(strumLine.vocalsSuffix) : 0);
 		add(vocalsSuffixDropDown);
 		addLabelOn(vocalsSuffixDropDown, "Vocal Suffix");
 	}
@@ -179,7 +177,7 @@ class CharterStrumlineScreen extends UISubstateWindow {
 			strumScale: hudScaleStepper.value,
 			vocalsSuffix: vocalsSuffixDropDown.options[vocalsSuffixDropDown.index] != "NONE" ? vocalsSuffixDropDown.options[vocalsSuffixDropDown.index] : ""
 		};
-		if(!usesChartscrollSpeed.checked) newStrumLine.scrollSpeed = scrollSpeedStepper.value;
+		if(!usesChartScrollSpeed.checked) newStrumLine.scrollSpeed = scrollSpeedStepper.value;
 		if (onSave != null) onSave(newStrumLine);
 	}
 }
@@ -194,7 +192,8 @@ class CharacterButton extends UIButton {
 		super(x, y, "", null, 250, 54);
 
 		charIcon = new HealthIcon(Character.getIconFromCharName(char));
-		charIcon.scale.set(0.3, 0.3);
+		var size = Std.int(150 * 0.3);
+		charIcon.setUnstretchedGraphicSize(size, size, true);
 		charIcon.updateHitbox();
 		charIcon.setPosition(x + 10, bHeight/2 - charIcon.height / 2);
 		charIcon.scrollFactor.set(1,1);
@@ -206,11 +205,10 @@ class CharacterButton extends UIButton {
 		textBox.antialiasing = true;
 		textBox.onChange = function(char:String) {
 			char = Character.getIconFromCharName(char);
-			var image = Paths.image("icons/" + char);
-			if(!Assets.exists(image))
-				image = Paths.image("icons/face");
-			charIcon.loadGraphic(image, true, 150, 150);
+			charIcon.setIcon(char);
+			charIcon.setUnstretchedGraphicSize(size, size, true);
 			charIcon.updateHitbox();
+			charIcon.setPosition(x + 10, bHeight/2 - charIcon.height / 2);
 		}
 
 		deleteButton = new UIButton(textBox.x + 115 + 16, bHeight/2 - (32/2), "", function () {

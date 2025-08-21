@@ -1,7 +1,7 @@
 package funkin.backend.utils;
 
-import flixel.util.FlxColor;
 import flixel.text.FlxText;
+import flixel.util.FlxColor;
 
 class MarkdownUtil {
 	public static function applyMarkdownText(text:FlxText, str:String) {

@@ -1,21 +1,29 @@
 package funkin.backend;
 
 import flixel.FlxState;
-import funkin.backend.scripting.events.*;
+import flixel.FlxSubState;
+import funkin.backend.scripting.DummyScript;
 import funkin.backend.scripting.Script;
 import funkin.backend.scripting.ScriptPack;
-import funkin.backend.scripting.DummyScript;
-import funkin.backend.system.interfaces.IBeatReceiver;
+import funkin.backend.scripting.events.*;
 import funkin.backend.system.Conductor;
 import funkin.backend.system.Controls;
+import funkin.backend.system.interfaces.IBeatReceiver;
 import funkin.options.PlayerSettings;
-import flixel.FlxSubState;
 
+/**
+ * Base class for all the sub states.
+ * Handles the scripts, the transitions, and the beat and step events.
+**/
 class MusicBeatSubstate extends FlxSubState implements IBeatReceiver
 {
 	private var lastBeat:Float = 0;
 	private var lastStep:Float = 0;
 
+	/**
+	 * Whether this specific substate can open custom transitions
+	 */
+	public var canOpenCustomTransition:Bool = false;
 	/**
 	 * Current step
 	 */
@@ -126,15 +134,19 @@ class MusicBeatSubstate extends FlxSubState implements IBeatReceiver
 			call("postUpdate", [elapsed]);
 		}
 
-		if (_requestSubStateReset)
-		{
+		// if (subState == null && (MusicBeatState.ALLOW_DEV_RELOAD && controls.DEV_RELOAD)) {
+		// 	Logs.trace("Reloading Current SubState...", INFO, YELLOW);
+		// 	var test = Type.createInstance(Type.getClass(this), [this.scriptsAllowed, this.scriptName]);
+		// 	parent.openSubState(test);
+		// }
+
+		if (_requestSubStateReset) {
 			_requestSubStateReset = false;
 			resetSubState();
 		}
+
 		if (subState != null)
-		{
 			subState.tryUpdate(elapsed);
-		}
 	}
 
 	override function close() {
@@ -171,29 +183,25 @@ class MusicBeatSubstate extends FlxSubState implements IBeatReceiver
 
 	override function update(elapsed:Float)
 	{
-		// TODO: DEBUG MODE!!
-		if (FlxG.keys.justPressed.F5) {
-			loadScript();
-		}
 		call("update", [elapsed]);
 		super.update(elapsed);
 	}
 
 	@:dox(hide) public function stepHit(curStep:Int):Void
 	{
-		for(e in members) if (e is IBeatReceiver) cast(e, IBeatReceiver).stepHit(curStep);
+		for(e in members) if (e is IBeatReceiver) ({var _:IBeatReceiver=cast e;_;}).stepHit(curStep);
 		call("stepHit", [curStep]);
 	}
 
 	@:dox(hide) public function beatHit(curBeat:Int):Void
 	{
-		for(e in members) if (e is IBeatReceiver) cast(e, IBeatReceiver).beatHit(curBeat);
+		for(e in members) if (e is IBeatReceiver) ({var _:IBeatReceiver=cast e;_;}).beatHit(curBeat);
 		call("beatHit", [curBeat]);
 	}
 
 	@:dox(hide) public function measureHit(curMeasure:Int):Void
 	{
-		for(e in members) if (e is IBeatReceiver) cast(e, IBeatReceiver).measureHit(curMeasure);
+		for(e in members) if (e is IBeatReceiver) ({var _:IBeatReceiver=cast e;_;}).measureHit(curMeasure);
 		call("measureHit", [curMeasure]);
 	}
 
@@ -217,7 +225,7 @@ class MusicBeatSubstate extends FlxSubState implements IBeatReceiver
 	public override function openSubState(subState:FlxSubState) {
 		var e = event("onOpenSubState", EventManager.get(StateEvent).recycle(subState));
 		if (!e.cancelled)
-			super.openSubState(subState);
+			super.openSubState(e.substate is FlxSubState ? cast e.substate : subState);
 	}
 
 	public override function onResize(w:Int, h:Int) {
@@ -235,7 +243,7 @@ class MusicBeatSubstate extends FlxSubState implements IBeatReceiver
 		var e = event("onStateSwitch", EventManager.get(StateEvent).recycle(nextState));
 		if (e.cancelled)
 			return false;
-		return super.switchTo(nextState);
+		return super.switchTo(e.substate);
 	}
 
 	public override function onFocus() {
@@ -250,18 +258,14 @@ class MusicBeatSubstate extends FlxSubState implements IBeatReceiver
 
 	public var parent:FlxState;
 
-	public function onSubstateOpen() {
-
-	}
+	public function onSubstateOpen() {}
 
 	public override function resetSubState() {
-		if (subState != null && subState is MusicBeatSubstate) {
-			cast(subState, MusicBeatSubstate).parent = this;
-			super.resetSubState();
-			if (subState != null)
-				cast(subState, MusicBeatSubstate).onSubstateOpen();
-			return;
-		}
 		super.resetSubState();
+		if (subState != null && subState is MusicBeatSubstate) {
+			var subState:MusicBeatSubstate = cast subState;
+			subState.parent = this;
+			subState.onSubstateOpen();
+		}
 	}
 }

@@ -24,22 +24,19 @@ import funkin.backend.system.MobileInput;
 #if ALLOW_MULTITHREADING
 import sys.thread.Thread;
 #end
-
-#if sys
-import sys.io.File;
+#if android
+import android.content.Context;
+import android.os.Build;
 #end
 
 class Main extends Sprite
 {
-	// make this empty once you guys are done with the project.
-	// good luck /gen <3 @crowplexus
-	public static final releaseCycle:String = "Beta";
-
 	public static var instance:Main;
 
 	public static var modToLoad:String = null;
 	public static var forceGPUOnlyBitmapsOff:Bool = #if windows false #else true #end;
 	public static var noTerminalColor:Bool = false;
+	public static var verbose:Bool = false;
 
 	public static var scaleMode:FunkinRatioScaleMode;
 	public static var framerateSprite:funkin.backend.system.framerate.Framerate;
@@ -70,7 +67,7 @@ class Main extends Sprite
 		instance = this;
 
 		#if mobile
-		Sys.setCwd(getStorageDirectory());
+		fixWorkingDirectory();
 		#end
 
 		CrashHandler.init();
@@ -89,12 +86,12 @@ class Main extends Sprite
 	public static var audioDisconnected:Bool = false;
 
 	public static var changeID:Int = 0;
-	public static var pathBack = #if windows
+	public static var pathBack = #if (windows || linux)
 			"../../../../"
 		#elseif mac
 			"../../../../../../../"
 		#else
-			""
+			"../../../../"
 		#end;
 	public static var startedFromSource:Bool = #if TEST_BUILD true #else false #end;
 
@@ -132,6 +129,9 @@ class Main extends Sprite
 		ShaderResizeFix.init();
 		Logs.init();
 		Paths.init();
+
+		hscript.Interp.importRedirects = funkin.backend.scripting.Script.getDefaultImportRedirects();
+
 		#if GLOBAL_SCRIPT
 		funkin.backend.scripting.GlobalScript.init();
 		#end
@@ -178,18 +178,27 @@ class Main extends Sprite
 		ModsFolder.switchMod(modToLoad.getDefault(Options.lastLoadedMod));
 		#end
 
+		funkin.backend.system.mobile.MobileHandler.init();
+
 		initTransition();
 	}
 
-	public static function refreshAssets() {
-		WindowUtils.resetTitle();
+	public static function refreshAssets() @:privateAccess {
+		FunkinCache.instance.clearSecondLayer();
 
-		FlxSoundTray.volumeChangeSFX = Paths.sound('menu/volume');
-		FlxSoundTray.volumeUpChangeSFX = null;
-		FlxSoundTray.volumeDownChangeSFX = null;
+		var game = FlxG.game;
+		var daSndTray = Type.createInstance(game._customSoundTray = funkin.menus.ui.FunkinSoundTray, []);
+		var index:Int = game.numChildren - 1;
 
-		if (FlxG.game.soundTray != null)
-			FlxG.game.soundTray.text.setTextFormat(new TextFormat(Paths.font("vcr.ttf")));
+		if(game.soundTray != null)
+		{
+			var newIndex:Int = game.getChildIndex(game.soundTray);
+			if(newIndex != -1) index = newIndex;
+			game.removeChild(game.soundTray);
+			game.soundTray.__cleanup();
+		}
+
+		game.addChildAt(game.soundTray = daSndTray, index);
 	}
 
 	public static function initTransition() {
@@ -212,8 +221,8 @@ class Main extends Sprite
 	}
 
 	private static function onStateSwitchPost() {
-		// manual asset clearing since base openfl one doesnt clear lime one
-		// doesnt clear bitmaps since flixel fork does it auto
+		// manual asset clearing since base openfl one does'nt clear lime one
+		// does'nt clear bitmaps since flixel fork does it auto
 
 		@:privateAccess {
 			// clear uint8 pools
@@ -221,17 +230,30 @@ class Main extends Sprite
 				for(b in pool.clear())
 					b.destroy();
 			}
+
 			openfl.display3D.utils.UInt8Buff._pools.clear();
 		}
 
 		MemoryUtil.clearMajor();
 	}
 
+	public static var noCwdFix:Bool = false;
+	public static function fixWorkingDirectory() {
+		#if windows
+		if (!noCwdFix && !sys.FileSystem.exists('manifest/default.json')) {
+			Sys.setCwd(haxe.io.Path.directory(Sys.programPath()));
+		}
+		#elseif android
+		Sys.setCwd(haxe.io.Path.addTrailingSlash(VERSION.SDK_INT > 30 ? Context.getObbDir() : Context.getExternalFilesDir()));
+		#elseif ios
+		Sys.setCwd(lime.system.System.documentsDirectory);
+		#elseif switch
+		Sys.setCwd(haxe.io.Path.addTrailingSlash(openfl.filesystem.File.applicationStorageDirectory.nativePath));
+		#end
+	}
+
 	private static var _tickFocused:Float = 0;
 	public static function get_timeSinceFocus():Float {
 		return (FlxG.game.ticks - _tickFocused) / 1000;
 	}
-
-	public static function getStorageDirectory():String
-		return #if ios lime.system.System.documentsDirectory #else Sys.getCwd() #end;
 }

@@ -1,8 +1,8 @@
 package funkin.editors.character;
 
-import haxe.xml.Access;
 import flixel.math.FlxPoint;
 import funkin.game.Character;
+import haxe.xml.Access;
 
 class CharacterGhostsHandler extends FlxTypedGroup<Character> {
 	public var character:Character;

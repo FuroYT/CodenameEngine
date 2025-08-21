@@ -1,7 +1,7 @@
 package funkin.editors.ui;
 
-import lime.ui.KeyModifier;
 import lime.ui.KeyCode;
+import lime.ui.KeyModifier;
 
 class UIAutoCompleteTextBox extends UITextBox {
 	public var suggestionText:UIText;
@@ -59,6 +59,7 @@ class UIAutoCompleteTextBox extends UITextBox {
 			var text = label.text;
 			_suggestions = [];
 			if(text.length > 0) {
+				// for(i in suggestItems) if(i.startsWith(text)) _suggestions.pushOnce(i);
 				for(i in suggestItems) if(!_suggestions.contains(i) && i.startsWith(text)) _suggestions.push(i);
 
 				// Clean up suggestions

@@ -9,13 +9,11 @@ import funkin.backend.FunkinSprite;
 import funkin.backend.scripting.DummyScript;
 import funkin.backend.scripting.Script;
 import funkin.backend.scripting.ScriptPack;
-import funkin.backend.scripting.events.CharacterNodeEvent;
-import funkin.backend.scripting.events.CharacterXMLEvent;
-import funkin.backend.scripting.events.DanceEvent;
-import funkin.backend.scripting.events.DirectionAnimEvent;
-import funkin.backend.scripting.events.PlayAnimEvent;
-import funkin.backend.scripting.events.PlayAnimEvent.PlayAnimContext;
+import funkin.backend.scripting.events.CancellableEvent;
+import funkin.backend.scripting.events.character.*;
+import funkin.backend.scripting.events.sprite.*;
 import funkin.backend.scripting.events.PointEvent;
+import funkin.backend.scripting.events.DrawEvent;
 import funkin.backend.system.Conductor;
 import funkin.backend.system.interfaces.IBeatReceiver;
 import funkin.backend.system.interfaces.IOffsetCompatible;
@@ -32,8 +30,8 @@ using StringTools;
 @:allow(funkin.game.PlayState)
 class Character extends FunkinSprite implements IBeatReceiver implements IOffsetCompatible {
 	public var isPlayer:Bool = false;
-	public var curCharacter:String = 'bf';
-	public var sprite:String = 'bf';
+	public var curCharacter:String = Flags.DEFAULT_CHARACTER;
+	public var sprite:String = Flags.DEFAULT_CHARACTER;
 
 	public var lastHit:Float = Math.NEGATIVE_INFINITY;
 	public var holdTime:Float = 4;
@@ -63,11 +61,12 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 
 	@:noCompletion var __switchAnims:Bool = true;
 
-	public function new(x:Float, y:Float, ?character:String = "bf", isPlayer:Bool = false, switchAnims:Bool = true, disableScripts:Bool = false) {
+	public function new(x:Float, y:Float, ?character:String, isPlayer:Bool = false, switchAnims:Bool = true, disableScripts:Bool = false)
+	{
 		super(x, y);
 
 		animOffsets = new Map<String, FlxPoint>();
-		curCharacter = character;
+		curCharacter = character != null ? character : Flags.DEFAULT_CHARACTER;
 		this.isPlayer = isPlayer;
 		__switchAnims = switchAnims;
 
@@ -102,7 +101,9 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 		if (isPlayer != playerOffsets && switchAnims)
 			swapLeftRightAnimations();
 
-		frameOffset.set(getAnimOffset(getAnimName()).x, getAnimOffset(getAnimName()).y);
+		var o:FlxPoint = getAnimOffset(getAnimName());
+		frameOffset.set(o.x, o.y);
+		o.put();
 		if (isPlayer) flipX = !flipX;
 		__baseFlipped = flipX;
 	}
@@ -125,7 +126,7 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 		scripts.call("update", [elapsed]);
 		if (stunned) {
 			__stunnedTime += elapsed;
-			if (__stunnedTime > 5 / 60)
+			if (__stunnedTime > Flags.STUNNED_TIME)
 				stunned = false;
 		}
 
@@ -151,6 +152,11 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 	}
 
 	public function tryDance() {
+		var event = new CancellableEvent();
+		script.call("onTryDance", [event]);
+		if (event.cancelled)
+			return;
+
 		switch (lastAnimContext) {
 			case SING | MISS:
 				if (lastHit + (Conductor.stepCrochet * holdTime) < Conductor.songPosition)
@@ -177,6 +183,9 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 			tryDance();
 	}
 
+	public override function measureHit(curMeasure:Int)
+		script.call("measureHit", [curMeasure]);
+
 	public override function stepHit(curStep:Int)
 		scripts.call("stepHit", [curStep]);
 
@@ -200,25 +209,50 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 		return (isPlayer != playerOffsets) != (flipX != __baseFlipped);
 
 	public override function draw() {
-		if (isFlippedOffsets()) {
-			__reverseDrawProcedure = true;
-			flipX = !flipX;
-			scale.x *= -1;
+		var e = EventManager.get(DrawEvent).recycle();
+		script.call("draw", [e]);
 
-			super.draw();
+		if(!e.cancelled) {
+			if (isFlippedOffsets()) {
+				__reverseDrawProcedure = true;
+				flipX = !flipX;
+				scale.x *= -1;
 
-			flipX = !flipX;
-			scale.x *= -1;
-			__reverseDrawProcedure = false;
-		} else super.draw();
+				super.draw();
+
+				flipX = !flipX;
+				scale.x *= -1;
+				__reverseDrawProcedure = false;
+			} else super.draw();
+		}
+
+		script.call("postDraw", [e]);
 	}
 
 	public var singAnims = ["singLEFT", "singDOWN", "singUP", "singRIGHT"];
-	public function playSingAnim(direction:Int, suffix:String = "", Context:PlayAnimContext = SING, ?Force:Null<Bool> = null, Reversed:Bool = false, Frame:Int = 0) {
-		var event = EventManager.get(DirectionAnimEvent).recycle(singAnims[direction % singAnims.length] + suffix, direction, suffix, Context, Reversed, Frame, Force);
-		scripts.call("onPlaySingAnim", [event]);
-		if (!event.cancelled)
-			playAnim(event.animName, event.force, event.context, event.reversed, event.frame);
+	public inline function getSingAnim(direction:Int, suffix:String = ""):String
+	{
+		return singAnims[direction % singAnims.length] + suffix;
+	}
+
+	/**
+	 * Like `playSingAnimUnsafe` but checks if the character has the animation with the suffix part, otherwise it plays the animation without the suffix part.
+	 */
+	public function playSingAnim(direction:Int, suffix:String = "", Context:PlayAnimContext = SING, ?Force:Null<Bool> = null, Reversed:Bool = false, Frame:Int = 0)
+	{
+		var event = EventManager.get(DirectionAnimEvent).recycle(getSingAnim(direction, suffix), direction, suffix, Context, Reversed, Frame, Force);
+		script.call("onPlaySingAnim", [event]);
+		if (event.cancelled) return;
+
+		playSingAnimUnsafe(event.direction, hasAnimation(event.animName) ? event.suffix : "", event.context, event.force, event.reversed, event.frame);
+	}
+
+	public function playSingAnimUnsafe(direction:Int, suffix:String = "", Context:PlayAnimContext = SING, Force:Bool = true, Reversed:Bool = false, Frame:Int = 0) {
+		var event = EventManager.get(DirectionAnimEvent).recycle(getSingAnim(direction, suffix), direction, suffix, Context, Reversed, Frame, Force);
+		script.call("playSingAnimUnsafe", [event]);
+		if (event.cancelled) return;
+
+		playAnim(event.animName, event.force, event.context, event.reversed, event.frame);
 	}
 
 	public override function playAnim(AnimName:String, ?Force:Bool, Context:PlayAnimContext = NONE, Reversed:Bool = false, Frame:Int = 0) {
@@ -245,8 +279,10 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 	}
 
 	public override function destroy() {
-		scripts.call('destroy');
-		scripts.destroy();
+		if(scripts != null) {
+			scripts.call('destroy');
+			scripts.destroy();
+		}
 		super.destroy();
 
 		cameraOffset.put();
@@ -255,15 +291,14 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 
 	@:noCompletion var __reverseTrailProcedure:Bool = false;
 
-	// When using trails on characters you should do `trail.beforeCache = char.beforeTrailCache;`
+	// When using trails on characters you should do `trail.beforeCache = char.beforeTrailCache;` and `trail.afterCache = char.afterTrailCache;`
 	public dynamic function beforeTrailCache()
 		if (isFlippedOffsets()) {
 			flipX = !flipX;
 			scale.x *= -1;
 			__reverseTrailProcedure = true;
 		}
-
-	// When using trails on characters you should do `trail.afterCache = char.afterTrailCache;`
+	
 	public dynamic function afterTrailCache()
 		if (__reverseTrailProcedure) {
 			flipX = !flipX;
@@ -442,6 +477,9 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 	@:noCompletion private function get_danceInterval()
 		return beatInterval;
 
+	public static var FALLBACK_CHARACTER:String = Flags.DEFAULT_CHARACTER;
+	public static var FALLBACK_DEAD_CHARACTER:String = Flags.DEFAULT_GAMEOVER_CHARACTER;
+
 	private function set_script(script:Script):Script {
 		if (scripts == null) (scripts = new ScriptPack("Character")).setParent(this);
 
@@ -459,12 +497,10 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 	// ---- end of Backwards compat ----
 
 
-	public static var FALLBACK_CHARACTER:String = "bf";
-	public static var FALLBACK_DEAD_CHARACTER:String = "bf-dead";
 	public static function getXMLFromCharName(character:OneOfTwo<String, Character>):Access {
 		var char:Character = null;
 		if (character is Character) {
-			char = cast(character, Character);
+			char = cast character;
 			character = char.curCharacter;
 		}
 
@@ -473,7 +509,7 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 			var xmlPath:String = Paths.xml('characters/$character');
 			if (!Assets.exists(xmlPath)) {
 				character = FALLBACK_CHARACTER;
-				if (char != null) 
+				if (char != null)
 					char.curCharacter = character;
 				continue;
 			}
@@ -496,9 +532,10 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 		return xml;
 	}
 
-	public static function getIconFromCharName(?character:String) {
-		if(character == null) return "face";
-		var icon:String = character;
+	public static function getIconFromCharName(?character:String, ?defaultIcon:String = null) {
+		if(character == null) return Flags.DEFAULT_HEALTH_ICON;
+		if(defaultIcon == null) defaultIcon = character;
+		var icon:String = defaultIcon;
 
 		var xml:Access = getXMLFromCharName(character);
 		if (xml != null && xml.x.exists("icon")) icon = xml.x.get("icon");
@@ -506,9 +543,17 @@ class Character extends FunkinSprite implements IBeatReceiver implements IOffset
 		return icon;
 	}
 
-	public static function getList(?mods:Bool = false):Array<String>
-		return [
-			for (path in Paths.getFolderContent('data/characters/', true, mods ? MODS : BOTH))
-				if (Path.extension(path) == "xml") CoolUtil.getFilename(path)
-		];
+	public static function getList(?mods:Bool = false, includeFolders:Bool = false, folder:String = 'data/characters/'):Array<String> {
+		var list:Array<String> = [];
+		if(includeFolders) {
+			for (path in Paths.getFolderDirectories(folder, true, mods ? MODS : BOTH)) {
+				if(!path.endsWith("/")) path += "/";
+				list.push(path);
+			}
+		}
+		for (path in Paths.getFolderContent(folder, true, mods ? MODS : BOTH))
+			if (Path.extension(path) == "xml")
+				list.push(CoolUtil.getFilename(path));
+		return list;
+	}
 }

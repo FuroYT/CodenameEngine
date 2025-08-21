@@ -1,14 +1,14 @@
 package funkin.backend;
 
+import flixel.FlxState;
+import flixel.tweens.FlxTween;
+import funkin.backend.scripting.Script;
 import funkin.backend.scripting.events.CancellableEvent;
 import funkin.backend.scripting.events.TransitionCreationEvent;
-import funkin.backend.scripting.Script;
-import flixel.tweens.FlxTween;
-import flixel.FlxState;
 import funkin.backend.utils.FunkinParentDisabler;
 
 class MusicBeatTransition extends MusicBeatSubstate {
-	public static var script:String = "";
+	public static var script:String = Flags.DEFAULT_TRANSITION_SCRIPT;
 	public var transitionScript:Script;
 
 	var nextFrameSkip:Bool = false;

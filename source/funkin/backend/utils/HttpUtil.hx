@@ -4,7 +4,7 @@ import haxe.Http;
 
 class HttpUtil
 {
-	public static var userAgent:String = "request";
+	public static var userAgent:String = Flags.USER_AGENT;
 	public static function requestText(url:String)
 	{
 		var r = null;

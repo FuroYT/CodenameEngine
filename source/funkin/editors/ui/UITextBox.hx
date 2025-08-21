@@ -1,8 +1,8 @@
 package funkin.editors.ui;
 
 import flixel.math.FlxPoint;
-import lime.ui.KeyModifier;
 import lime.ui.KeyCode;
+import lime.ui.KeyModifier;
 import openfl.desktop.Clipboard;
 import openfl.geom.Rectangle;
 

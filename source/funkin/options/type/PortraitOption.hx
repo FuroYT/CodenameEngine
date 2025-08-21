@@ -3,6 +3,10 @@ package funkin.options.type;
 import flixel.graphics.FlxGraphic;
 import funkin.backend.shaders.CustomShader;
 
+/**
+ * Option type that has a portrait.
+ * Used in the credits menu.
+**/
 class PortraitOption extends TextOption {
 	public var portrait:FlxSprite = null;
 

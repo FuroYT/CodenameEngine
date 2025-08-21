@@ -1,41 +1,32 @@
 package funkin.editors.charter;
 // ! FUCK YOU CHUF (your biggest fan -lunar) <3
 
-import flixel.input.FlxPointer;
-import openfl.geom.Point;
-import openfl.geom.Rectangle;
-import flixel.graphics.FlxGraphic;
-import flixel.addons.display.FlxTiledSprite;
-import funkin.editors.ui.UIContextMenu.UIContextMenuOptionSpr;
-import funkin.editors.ui.UITopMenu.UITopMenuButton;
-import funkin.editors.charter.CharterStrumline;
-import funkin.editors.charter.CharterBackdropGroup.EventBackdrop;
-import funkin.backend.system.framerate.Framerate;
-import haxe.Json;
 import flixel.input.keyboard.FlxKey;
-import flixel.sound.FlxSound;
 import flixel.math.FlxPoint;
-import funkin.editors.charter.CharterBackdropGroup.CharterBackdropDummy;
-import funkin.backend.system.Conductor;
+import flixel.sound.FlxSound;
 import funkin.backend.chart.*;
 import funkin.backend.chart.ChartData;
-import flixel.addons.display.FlxBackdrop;
+import funkin.backend.system.Conductor;
+import funkin.backend.system.framerate.Framerate;
+import funkin.editors.charter.CharterBackdropGroup.CharterBackdropDummy;
+import funkin.editors.charter.CharterBackdropGroup.EventBackdrop;
+import funkin.editors.charter.CharterStrumline;
 import funkin.editors.ui.UIContextMenu.UIContextMenuOption;
+import funkin.editors.ui.UIContextMenu.UIContextMenuOptionSpr;
 import funkin.editors.ui.UIState;
-import flixel.util.FlxColor;
-import openfl.display.BitmapData;
-import funkin.backend.shaders.CustomShader;
+import funkin.editors.ui.UITopMenu.UITopMenuButton;
+import haxe.Json;
 
 class Charter extends UIState {
 	public static var __song:String;
 	static var __diff:String;
 	static var __reload:Bool;
 
-	var chart(get, null):ChartData;
+	var chart(get, never):ChartData;
 	private function get_chart()
 		return PlayState.SONG;
 
-	public static var instance(get, null):Charter;
+	public static var instance(get, never):Charter;
 
 	private static inline function get_instance()
 		return FlxG.state is Charter ? cast FlxG.state : null;
@@ -553,7 +544,7 @@ class Charter extends UIState {
 		noteTypes = PlayState.SONG.noteTypes;
 
 		FlxG.sound.setMusic(FlxG.sound.load(Paths.inst(__song, __diff)));
-		if (PlayState.SONG.meta.needsVoices != false) // null or true
+		if (PlayState.SONG.meta.needsVoices != false && Assets.exists(Paths.voices(__song, __diff))) // null or true
 			vocals = FlxG.sound.load(Paths.voices(__song, __diff));
 		else
 			vocals = new FlxSound();
@@ -609,7 +600,7 @@ class Charter extends UIState {
 		// Just for now until i add event stacking -lunar
 		try {__relinkUndos();}
 		catch (e) {Logs.trace('Failed to relink undos: ${Std.string(e)}', ERROR);}
-		
+
 		__applyPlaytestInfo();
 	}
 
@@ -693,6 +684,7 @@ class Charter extends UIState {
 	public var dragStartPos:FlxPoint = new FlxPoint();
 	public var mousePos:FlxPoint = new FlxPoint();
 	public var selectionDragging:Bool = false;
+	public var isSelecting:Bool = false;
 
 	public function updateSelectionLogic() {
 		function select(s:ICharterSelectable) {
@@ -702,7 +694,8 @@ class Charter extends UIState {
 		}
 
 		for (group in [notesGroup, eventsGroup]) {
-			cast(group, FlxTypedGroup<Dynamic>).forEach(function(s) {
+			var group:FlxTypedGroup<Dynamic> = cast group;
+			group.forEach(function(s) {
 				s.selected = false;
 				if (gridActionType == NONE) {
 					if (s is CharterNote) {
@@ -722,10 +715,10 @@ class Charter extends UIState {
 		autoSaveTimer -= elapsed;
 
 		if (autoSaveTimer < Options.charterAutoSaveWarningTime && !autoSaveNotif.cancelled && !autoSaveNotif.showedAnimation) {
-			if (Options.charterAutoSavesSeperateFolder)
+			if (Options.charterAutoSavesSeparateFolder)
 				__autoSaveLocation = __diff.toLowerCase() + DateTools.format(Date.now(), "%m-%d_%H-%M");
 			autoSaveNotif.startAutoSave(autoSaveTimer, 
-				!Options.charterAutoSavesSeperateFolder ? 'Saved chart at ${__diff.toLowerCase()}.json!' : 
+				!Options.charterAutoSavesSeparateFolder ? 'Saved chart at ${__diff.toLowerCase()}.json!' : 
 				'Saved chart at $__autoSaveLocation.json!'
 			);
 		}
@@ -735,7 +728,7 @@ class Charter extends UIState {
 				buildChart(); 
 				var songPath:String = '${Paths.getAssetsRoot()}/songs/${__song.toLowerCase()}';
 	
-				if (Options.charterAutoSavesSeperateFolder)
+				if (Options.charterAutoSavesSeparateFolder)
 					Chart.save(songPath, PlayState.SONG, __autoSaveLocation, {saveMetaInChart: false, folder: "autosaves", prettyPrint: Options.editorPrettyPrint});
 				else 
 					Chart.save(songPath, PlayState.SONG, __diff.toLowerCase(), {saveMetaInChart: false, prettyPrint: Options.editorPrettyPrint});
@@ -760,28 +753,35 @@ class Charter extends UIState {
 			case BOX_SELECTION:
 				if (gridBackdropDummy.hoveredByChild) {
 					selectionBox.visible = true;
-					if (FlxG.mouse.pressed) {
+					if (isSelecting) {
 						selectionBox.x = Math.min(mousePos.x, dragStartPos.x);
 						selectionBox.y = Math.min(mousePos.y, dragStartPos.y);
 						selectionBox.bWidth = Std.int(Math.abs(mousePos.x - dragStartPos.x));
 						selectionBox.bHeight = Std.int(Math.abs(mousePos.y - dragStartPos.y));
+						if (FlxG.mouse.justReleased) isSelecting = false;
 					} else {
 						if (FlxG.keys.pressed.SHIFT) {
-							for (group in [notesGroup, eventsGroup])
-								for(n in cast(group, FlxTypedGroup<Dynamic>))
+							for (group in [notesGroup, eventsGroup]) {
+								var group:FlxTypedGroup<Dynamic> = cast group;
+								for(n in group)
 									if (n.handleSelection(selectionBox) && selection.contains(n))
 										selection.remove(n);
+							}
 						} else if (FlxG.keys.pressed.CONTROL) {
-							for (group in [notesGroup, eventsGroup])
-								for(n in cast(group, FlxTypedGroup<Dynamic>))
+							for (group in [notesGroup, eventsGroup]) {
+								var group:FlxTypedGroup<Dynamic> = cast group;
+								for(n in group)
 									if (n.handleSelection(selectionBox) && !selection.contains(n))
 										selection.push(n);
+							}
 						} else {
 							selection = [];
-							for (group in [notesGroup, eventsGroup])
-								for(n in cast(group, FlxTypedGroup<Dynamic>))
+							for (group in [notesGroup, eventsGroup]) {
+								var group:FlxTypedGroup<Dynamic> = cast group;
+								for(n in group)
 									if (n.handleSelection(selectionBox))
 										selection.push(n);
+							}
 						}
 
 						selection = __fixSelection(selection);
@@ -822,7 +822,7 @@ class Charter extends UIState {
 
 							var boundedChange:FlxPoint = changePoint.clone();
 
-							// Some maths, so cool bro -lunar (i dont know why i quopte my self here)
+							// Some maths, so cool bro -lunar (i don't know why i quote my self here)
 							if (s.step + changePoint.x < 0) boundedChange.x += Math.abs(s.step + changePoint.x);
 							if (s.step + changePoint.x > __endStep-1) boundedChange.x -= (s.step + changePoint.x) - (__endStep-1);
 
@@ -837,8 +837,14 @@ class Charter extends UIState {
 							changePoint.put();
 						}
 
-						if (s is CharterNote) cast(s, CharterNote).snappedToStrumline = true;
-						if (s is UISprite) cast(s, UISprite).cursor = BUTTON;
+						if (s is CharterNote) {
+							var s:CharterNote = cast s;
+							s.snappedToStrumline = true;
+						}
+						if (s is UISprite) {
+							var s:UISprite = cast s;
+							s.cursor = BUTTON;
+						}
 					}
 					if (!(verticalChange == 0 && horizontalChange == 0)) {
 						notesGroup.sortNotes(); eventsGroup.sortEvents();
@@ -849,7 +855,7 @@ class Charter extends UIState {
 					currentCursor = ARROW;
 				}
 			case NONE:
-				if (FlxG.mouse.justPressed)
+				if (FlxG.mouse.justPressed) 
 					FlxG.mouse.getWorldPosition(charterCamera, dragStartPos);
 				else if (FlxG.mouse.justPressedRight) {
 					closeCurrentContextMenu();
@@ -858,26 +864,29 @@ class Charter extends UIState {
 
 				if (gridBackdropDummy.hovered) {
 					// AUTO DETECT
-					if (FlxG.mouse.pressed && (Math.abs(mousePos.x - dragStartPos.x) > 20 || Math.abs(mousePos.y - dragStartPos.y) > 20))
+					if (FlxG.mouse.justPressed) isSelecting = true;
+					if (isSelecting && (Math.abs(mousePos.x - dragStartPos.x) > 20 || Math.abs(mousePos.y - dragStartPos.y) > 20)) {
 						gridActionType = BOX_SELECTION;
+					}
 
 					var id = Math.floor(mousePos.x / 40);
 					var mouseOnGrid = id >= 0 && id < 4 * gridBackdrops.strumlinesAmount && mousePos.y >= 0;
 
 					if (FlxG.mouse.justReleased) {
-							for (n in selection) n.selected = false;
-							selection = [];
+						for (n in selection) n.selected = false;
+						selection = [];
 
-							if (mouseOnGrid && mousePos.y > 0 && mousePos.y < (__endStep)*40) {
-								var note = new CharterNote();
-								note.updatePos(
-									FlxMath.bound(FlxG.keys.pressed.SHIFT ? ((mousePos.y-20) / 40) : quantStep(mousePos.y/40), 0, __endStep-1),
-									id % 4, 0, noteType, strumLines.members[Std.int(id/4)]
-								);
-								notesGroup.add(note);
-								selection = [note];
-								undos.addToUndo(CCreateSelection([note]));
-							}
+						if (mouseOnGrid && mousePos.y > 0 && mousePos.y < (__endStep)*40) {
+							var note = new CharterNote();
+							note.updatePos(
+								FlxMath.bound(FlxG.keys.pressed.SHIFT ? ((mousePos.y-20) / 40) : quantStep(mousePos.y/40), 0, __endStep-1),
+								id % 4, 0, noteType, strumLines.members[Std.int(id/4)]
+							);
+							notesGroup.add(note);
+							selection = [note];
+							undos.addToUndo(CCreateSelection([note]));
+						}
+						isSelecting = false;
 					}
 				} else if (gridBackdropDummy.hoveredByChild) {
 					if (FlxG.mouse.pressed) {
@@ -1043,9 +1052,9 @@ class Charter extends UIState {
 		if (selection.length <= 0) return [];
 
 		notesGroup.autoSort = false;
-		for (objects in [notesGroup, eventsGroup]) {
-			var group = cast(objects, FlxTypedGroup<Dynamic>);
-			var member = 0;
+		for (group in [notesGroup, eventsGroup]) {
+			var group:FlxTypedGroup<Dynamic> = cast group;
+			var member:Int = 0;
 			while(member < group.members.length) {
 				var s = group.members[member];
 				if (selection.contains(s))
@@ -1232,7 +1241,7 @@ class Charter extends UIState {
 					__camZoom = Math.pow(2, zoom);
 				}
 			} else {
-				if (!FlxG.sound.music.playing) {
+				if (!FlxG.sound.music.playing && FlxG.mouse.wheel != 0) {
 					Conductor.songPosition -= (__crochet * FlxG.mouse.wheel) - Conductor.songOffset;
 				}
 			}
@@ -1260,7 +1269,7 @@ class Charter extends UIState {
 		if (strumLines != null)
 			strumlineLockButton.button.animation.play(strumLines.draggable ? "1" : "0", true);
 
-		WindowUtils.prefix = undos.unsaved ? "* " : "";
+		WindowUtils.prefix = undos.unsaved ? Flags.UNDO_PREFIX : "";
 		SaveWarning.showWarning = undos.unsaved;
 
 		__firstFrame = false;
@@ -1282,8 +1291,11 @@ class Charter extends UIState {
 		for(id=>str in strumLines.members)
 			if (str != null) str.y = strumlineInfoBG.y;
 
+		strumlineAddButton.x = 0;
 		strumlineAddButton.y = strumlineInfoBG.y;
 		strumlineLockButton.y = strumlineInfoBG.y;
+
+		strumlineLockButton.text.visible = strumlineLockButton.button.selectable = strumlineLockButton.button.visible = strumLines.members.length > 0;
 	}
 
 	var zoom(default, set):Float = 0;
@@ -1299,7 +1311,7 @@ class Charter extends UIState {
 	#if REGION
 	function _file_exit(_) {
 		if (undos.unsaved) SaveWarning.triggerWarning();
-		else {undos = null; FlxG.switchState(new CharterSelection()); PlayState.resetSongInfos(); Charter.instance.__clearStatics();}
+		else {undos = null; FlxG.switchState(new CharterSelection()); Charter.instance.__clearStatics();}
 	}
 
 	function _file_save(_) {
@@ -1312,7 +1324,7 @@ class Charter extends UIState {
 	}
 
 	function _file_saveas(_) {
-		openSubState(new SaveSubstate(Json.stringify(Chart.filterChartForSaving(PlayState.SONG, false), null, Options.editorPrettyPrint ? "\t" : null), {
+		openSubState(new SaveSubstate(Json.stringify(Chart.filterChartForSaving(PlayState.SONG, false), null, Options.editorPrettyPrint ? Flags.JSON_PRETTY_PRINT : null), {
 			defaultSaveFile: '${__diff.toLowerCase()}.json'
 		}));
 		undos.save();
@@ -1328,7 +1340,7 @@ class Charter extends UIState {
 	}
 
 	function _file_saveas_no_events(_) {
-		openSubState(new SaveSubstate(Json.stringify(Chart.filterChartForSaving(PlayState.SONG, false, false), null, Options.editorPrettyPrint ? "\t" : null), {
+		openSubState(new SaveSubstate(Json.stringify(Chart.filterChartForSaving(PlayState.SONG, false, false), null, Options.editorPrettyPrint ? Flags.JSON_PRETTY_PRINT : null), {
 			defaultSaveFile: '${__diff.toLowerCase()}.json'
 		}));
 		undos.save();
@@ -1338,7 +1350,7 @@ class Charter extends UIState {
 		#if sys
 		CoolUtil.safeSaveFile(
 			'${Paths.getAssetsRoot()}/songs/${__song.toLowerCase()}/meta.json',
-			Json.stringify(PlayState.SONG.meta == null ? {} : PlayState.SONG.meta, null, "\t")
+			PlayState.SONG.meta == null ? null : Chart.makeMetaSaveable(PlayState.SONG.meta)
 		);
 		#else
 		_file_meta_saveas(_);
@@ -1346,20 +1358,20 @@ class Charter extends UIState {
 	}
 
 	function _file_meta_saveas(_) {
-		openSubState(new SaveSubstate(Json.stringify(PlayState.SONG.meta == null ? {} : PlayState.SONG.meta, null, "\t"), { // always pretty print meta
+		openSubState(new SaveSubstate(PlayState.SONG.meta == null ? null : Chart.makeMetaSaveable(PlayState.SONG.meta), { // always pretty print meta
 			defaultSaveFile: 'meta.json'
 		}));
 	}
 
 	function _file_saveas_fnflegacy(_) {
-		openSubState(new SaveSubstate(Json.stringify(FNFLegacyParser.encode(PlayState.SONG), null, Options.editorPrettyPrint ? "\t" : null), {
-			defaultSaveFile: '${__song.toLowerCase().replace(" ", "-")}${__diff.toLowerCase() == "normal" ? "" : '-${__diff.toLowerCase()}'}.json',
+		openSubState(new SaveSubstate(Json.stringify(FNFLegacyParser.encode(PlayState.SONG), null, Options.editorPrettyPrint ? Flags.JSON_PRETTY_PRINT : null), {
+			defaultSaveFile: '${__song.toLowerCase().replace(" ", "-")}${__diff.toLowerCase() == Flags.DEFAULT_DIFFICULTY ? "" : '-${__diff.toLowerCase()}'}.json',
 		}));
 	}
 
 	function _file_saveas_psych(_) {
-		openSubState(new SaveSubstate(Json.stringify(PsychParser.encode(PlayState.SONG), null, Options.editorPrettyPrint ? "\t" : null), {
-			defaultSaveFile: '${__song.toLowerCase().replace(" ", "-")}${__diff.toLowerCase() == "normal" ? "" : '-${__diff.toLowerCase()}'}.json',
+		openSubState(new SaveSubstate(Json.stringify(PsychParser.encode(PlayState.SONG), null, Options.editorPrettyPrint ? Flags.JSON_PRETTY_PRINT : null), {
+			defaultSaveFile: '${__song.toLowerCase().replace(" ", "-")}${__diff.toLowerCase() == Flags.DEFAULT_DIFFICULTY ? "" : '-${__diff.toLowerCase()}'}.json',
 		}));
 	}
 
@@ -1367,7 +1379,7 @@ class Charter extends UIState {
 		#if sys
 		CoolUtil.safeSaveFile(
 			'${Paths.getAssetsRoot()}/songs/${__song.toLowerCase()}/events.json',
-			Json.stringify({events: PlayState.SONG.events == null ? [] : PlayState.SONG.events}, null, Options.editorPrettyPrint ? "\t" : null)
+			Json.stringify({events: PlayState.SONG.events == null ? [] : PlayState.SONG.events}, null, Options.editorPrettyPrint ? Flags.JSON_PRETTY_PRINT : null)
 		);
 		#else
 		_file_events_saveas(_);
@@ -1376,7 +1388,7 @@ class Charter extends UIState {
 
 	function _file_events_saveas(_) {
 		#if sys
-		openSubState(new SaveSubstate(Json.stringify({events: PlayState.SONG.events == null ? [] : PlayState.SONG.events}, null, Options.editorPrettyPrint ? "\t" : null), {
+		openSubState(new SaveSubstate(Json.stringify({events: PlayState.SONG.events == null ? [] : PlayState.SONG.events}, null, Options.editorPrettyPrint ? Flags.JSON_PRETTY_PRINT : null), {
 			defaultSaveFile: 'events.json'
 		}));
 		#end
@@ -1402,7 +1414,7 @@ class Charter extends UIState {
 				var note:CharterNote = cast s;
 				CNote(note.step - minStep, note.id, note.strumLineID, note.susLength, note.type);
 			} else if (s is CharterEvent) {
-				var event = cast(s,CharterEvent);
+				var event:CharterEvent = cast s;
 				CEvent(event.step - minStep, [for (event in event.events) Reflect.copy(event)]);
 			}
 		];
@@ -1641,13 +1653,13 @@ class Charter extends UIState {
 		t.icon = (Options.charterLowDetailWaveforms = !Options.charterLowDetailWaveforms) ? 1 : 0;
 		for (shader in waveformHandler.waveShaders) shader.data.lowDetail.value = [Options.charterLowDetailWaveforms];
 	}
-	
+
 	inline function _snap_increasesnap(_) changequant(1);
 	inline function _snap_decreasesnap(_) changequant(-1);
 	inline function _snap_resetsnap(_) setquant(16);
 
 	inline function changequant(change:Int) {quant = quants[FlxMath.wrap(quants.indexOf(quant) + change, 0, quants.length-1)]; buildSnapsUI();};
-	inline function setquant(newquant:Int) {quant = newquant; buildSnapsUI();}
+	inline function setquant(newQuant:Int) {quant = newQuant; buildSnapsUI();}
 
 	function buildSnapsUI():Array<UIContextMenuOption> {
 		var snapsTopButton:UITopMenuButton = topMenuSpr == null ? null : cast topMenuSpr.members[snapIndex];
@@ -1848,11 +1860,11 @@ class Charter extends UIState {
 
 	public inline function __fixSelection(selection:Selection):Selection {
 		var newSelection:Selection = new Selection();
-		for (s in selection) if (newSelection.indexOf(s) == -1) newSelection.push(s);
+		for (s in selection) newSelection.pushOnce(s);
 		return newSelection.filter((s:ICharterSelectable) -> {return s != null;});
 	}
 
-	// UH OH!!! DANGER ZONE APPOARCHING !!!! LUNARS SHITTY CODE !!!! -lunar
+	// UH OH!!! DANGER ZONE APPROACHING !!!! LUNARS SHITTY CODE !!!! -lunar
 
 	@:noCompletion public function __relinkSingleSelection(selectable:ICharterSelectable):ICharterSelectable {
 		if (selectable is CharterNote)
@@ -1922,7 +1934,7 @@ class Charter extends UIState {
 	}
 
 	@:noCompletion public function __clearStatics() {
-		selection = null; undos = null; clipboard = null; playtestInfo = null; 
+		selection = null; undos = null; clipboard = null; playtestInfo = null;
 		waveformHandler.destroy(); Charter.waveformHandler = null; autoSaveTimer = 0;
 	}
 
@@ -1996,9 +2008,9 @@ typedef SelectionDragChange = {
 	public inline function loop(onNote:CharterNote->Void, ?onEvent:CharterEvent->Void, ?draggableOnly:Bool = true) {
 		for (s in this) {
 			if (s is CharterNote && onNote != null && (draggableOnly ? s.draggable: true))
-				onNote(cast(s, CharterNote));
+				onNote(cast s);
 			else if (s is CharterEvent && onEvent != null && (draggableOnly ? s.draggable: true))
-				onEvent(cast(s, CharterEvent));
+				onEvent(cast s);
 		}
 	}
 }

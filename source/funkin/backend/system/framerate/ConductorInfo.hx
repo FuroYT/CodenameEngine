@@ -1,6 +1,5 @@
 package funkin.backend.system.framerate;
 
-
 class ConductorInfo extends FramerateCategory {
 	public function new() {
 		super("Conductor Info");

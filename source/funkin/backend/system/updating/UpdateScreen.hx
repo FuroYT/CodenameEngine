@@ -1,12 +1,12 @@
 package funkin.backend.system.updating;
 
-import funkin.backend.shaders.CustomShader;
-import funkin.backend.FunkinText;
-import funkin.menus.TitleState;
 import flixel.math.FlxRect;
 import flixel.sound.FlxSound;
 import flixel.ui.FlxBar;
+import funkin.backend.FunkinText;
+import funkin.backend.shaders.CustomShader;
 import funkin.backend.system.updating.UpdateUtil.UpdateCheckCallback;
+import funkin.menus.TitleState;
 
 class UpdateScreen extends MusicBeatState {
 	public var updater:AsyncUpdater;
@@ -56,7 +56,7 @@ class UpdateScreen extends MusicBeatState {
 		generalProgress.alignment = CENTER;
 		add(generalProgress);
 
-		overSound = FlxG.sound.load(Paths.sound('gameOverEnd'));
+		overSound = FlxG.sound.load(Paths.sound(Flags.DEFAULT_GAMEOVER_RETRY_SFX));
 
 		updater.execute();
 

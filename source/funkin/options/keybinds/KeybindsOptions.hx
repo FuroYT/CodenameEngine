@@ -4,10 +4,20 @@ import flixel.util.FlxColor;
 
 using StringTools;
 
+typedef KeybindsCategory = {
+	var name:String;
+	var settings:Array<KeybindsSettings>;
+	var ?devModeOnly:Bool;
+}
+typedef KeybindsSettings = {
+	var name:String;
+	var control:String;
+}
+
 class KeybindsOptions extends MusicBeatSubstate {
 	public static var instance:KeybindsOptions;
 
-	public var categories = [
+	public var categories:Array<KeybindsCategory> = [
 		{
 			name: 'Notes',
 			settings: [
@@ -67,12 +77,49 @@ class KeybindsOptions extends MusicBeatSubstate {
 			]
 		},
 		{
+			name: 'Volume',
+			settings: [
+				{
+					name: 'Up',
+					control: 'VOLUME_UP'
+				},
+				{
+					name: 'Down',
+					control: 'VOLUME_DOWN'
+				},
+				{
+					name: 'Mute',
+					control: 'VOLUME_MUTE'
+				},
+			]
+		},
+		{
 			name: 'Engine',
 			settings: [
 				{
 					name: 'Switch Mod',
 					control: 'SWITCHMOD'
 				},
+			]
+		},
+		{
+			name: 'Developer',
+			devModeOnly: true,
+			settings: [
+				{
+					name: 'Developer Menus',
+					control: 'DEV_ACCESS'
+				},
+				#if GLOBAL_SCRIPT  // since theyre integrated into global script  - Nex
+				{
+					name: 'Open Console',
+					control: 'DEV_CONSOLE'
+				},
+				{
+					name: 'Reload State',
+					control: 'DEV_RELOAD'
+				},
+				#end
 			]
 		}
 	];
@@ -128,7 +175,9 @@ class KeybindsOptions extends MusicBeatSubstate {
 		}
 
 		var k:Int = 0;
-		for(category in categories) {
+		for (category in categories) {
+			if (category.devModeOnly && !Options.devMode) continue;
+
 			k++;
 			var title = new Alphabet(0, k * 75, category.name, true);
 			title.screenCenter(X);
@@ -162,6 +211,10 @@ class KeybindsOptions extends MusicBeatSubstate {
 		}
 		add(alphabets);
 		add(camFollow);
+
+		FlxG.sound.volumeUpKeys = [];
+		FlxG.sound.volumeDownKeys = [];
+		FlxG.sound.muteKeys = [];
 	}
 
 	public override function destroy() {
@@ -175,10 +228,8 @@ class KeybindsOptions extends MusicBeatSubstate {
 	public override function update(elapsed:Float) {
 		super.update(elapsed);
 
-
-		if (isSubState) {
-			bg.alpha = lerp(bg.alpha, 0.1, 0.125);
-		} else {
+		if (isSubState) bg.alpha = lerp(bg.alpha, 0.1, 0.125);
+		else {
 			if (curSelected < 4) {
 				if (coloredBG.alpha == 0)
 					coloredBG.color = noteColors[curSelected];
@@ -194,11 +245,11 @@ class KeybindsOptions extends MusicBeatSubstate {
 			changeSelection((controls.UP_P ? -1 : 0) + (controls.DOWN_P ? 1 : 0));
 
 			if (controls.BACK) {
-				MusicBeatState.skipTransIn = true;
-				if (isSubState)
-					close();
-				else
+				if (isSubState) close();
+				else {
+					MusicBeatState.skipTransIn = true;
 					FlxG.switchState(new OptionsMenu());
+				}
 				Options.applyKeybinds();
 				Options.save();
 				return;

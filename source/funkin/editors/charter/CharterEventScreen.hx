@@ -1,10 +1,12 @@
 package funkin.editors.charter;
 
-import funkin.backend.chart.ChartData.ChartEvent;
-import funkin.backend.system.Conductor;
 import flixel.group.FlxGroup;
-import funkin.backend.chart.EventsData;
 import flixel.util.FlxColor;
+import funkin.backend.chart.ChartData.ChartEvent;
+import funkin.backend.chart.EventsData;
+import funkin.backend.system.Conductor;
+import funkin.game.Character;
+import funkin.game.Stage;
 
 using StringTools;
 
@@ -161,9 +163,27 @@ class CharterEventScreen extends UISubstateWindow {
 						colorWheel;
 					case TDropDown(options):
 						addLabel();
-						var dropdown = new UIDropDown(eventName.x, y, 320, 32, options, Std.int(Math.abs(options.indexOf(cast value))));
+						var optionIndex = options.indexOf(cast value);
+						if(optionIndex < 0) {
+							optionIndex = 0;
+						}
+						var dropdown = new UIDropDown(eventName.x, y, 320, 32, options, optionIndex);
 						paramsPanel.add(dropdown); paramsFields.push(dropdown);
 						dropdown;
+					case TCharacter:
+						addLabel();
+						var charFileList = Character.getList(false);
+						var textBox:UIAutoCompleteTextBox = new UIAutoCompleteTextBox(eventName.x, y, cast value);
+						textBox.suggestItems = charFileList;
+						paramsPanel.add(textBox); paramsFields.push(textBox);
+						textBox;
+					case TStage:
+						addLabel();
+						var stageFileList = Stage.getList(false);
+						var textBox:UIAutoCompleteTextBox = new UIAutoCompleteTextBox(eventName.x, y, cast value);
+						textBox.suggestItems = stageFileList;
+						paramsPanel.add(textBox); paramsFields.push(textBox);
+						textBox;
 					default:
 						paramsFields.push(null);
 						null;
@@ -182,11 +202,11 @@ class CharterEventScreen extends UISubstateWindow {
 	public function saveCurTab() {
 		if (curEvent < 0) return;
 
-		events[curEvent].params = [
-			for(p in paramsFields) {
+		var dataParams = EventsData.getEventParams(events[curEvent].name);
+		var params:Array<Dynamic> = [
+			for (i => p in paramsFields) {
 				if (p is UIDropDown) {
-					var dataParams = EventsData.getEventParams(events[curEvent].name);
-					if (dataParams[paramsFields.indexOf(p)].type == TStrumLine) cast(p, UIDropDown).index;
+					if (dataParams[i].type == TStrumLine) cast(p, UIDropDown).index;
 					else cast(p, UIDropDown).label.text;
 				}
 				else if (p is UINumericStepper) {
@@ -207,6 +227,14 @@ class CharterEventScreen extends UISubstateWindow {
 					null;
 			}
 		];
+
+		while(dataParams.length > 0 && {
+			var index = params.length - 1;
+			var dataParam = dataParams[index];
+			dataParam.saveIfDefault == false && params[index] == dataParam.defValue;
+		}) params.pop();
+
+		events[curEvent].params = params;
 	}
 }
 

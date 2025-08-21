@@ -1,12 +1,12 @@
 package funkin.editors.charter;
 
-import flixel.system.FlxAssets.FlxGraphicAsset;
-import funkin.editors.charter.Charter.ICharterSelectable;
 import flixel.math.FlxPoint;
+import flixel.system.FlxAssets.FlxGraphicAsset;
+import funkin.backend.chart.ChartData.ChartEvent;
+import funkin.editors.charter.Charter.ICharterSelectable;
+import funkin.editors.charter.CharterBackdropGroup.EventBackdrop;
 import funkin.game.Character;
 import funkin.game.HealthIcon;
-import funkin.editors.charter.CharterBackdropGroup.EventBackdrop;
-import funkin.backend.chart.ChartData.ChartEvent;
 
 class CharterEvent extends UISliceSprite implements ICharterSelectable {
 	public var events:Array<ChartEvent>;
@@ -84,7 +84,7 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 				generateDefaultIcon(event.name);
 			case "Camera Movement":
 				// custom icon for camera movement
-				var state = cast(FlxG.state, Charter);
+				var state:Charter = cast FlxG.state;
 				if (event.params != null && event.params[0] != null && event.params[0] >= 0 && event.params[0] < state.strumLines.length) {
 					// camera movement, use health icon
 					var icon = Character.getIconFromCharName(state.strumLines.members[event.params[0]].strumLine.characters[0]);

@@ -1,5 +1,8 @@
 package funkin.options.type;
 
+/**
+ * Option type that allows you to select an array of options.
+**/
 class ArrayOption extends OptionType {
 	public var selectCallback:String->Void;
 

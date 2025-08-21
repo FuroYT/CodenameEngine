@@ -1,8 +1,8 @@
 package funkin.editors.ui;
 
 import flixel.math.FlxPoint;
-import funkin.backend.shaders.CustomShader;
 import flixel.util.FlxColor;
+import funkin.backend.shaders.CustomShader;
 
 using flixel.util.FlxSpriteUtil;
 
@@ -44,10 +44,10 @@ class UIColorwheel extends UISliceSprite {
 
 		// Im too lazy to use a shader for this if its not even gonna change
 		colorSlider.pixels.lock();
-		for (pixely in 0...Std.int(colorSlider.height)) {
-			var color:Int = FlxColor.fromHSB(pixely / (colorSlider.height-1) * 360, 1, 1);
-			for (pixelx in 0...Std.int(colorSlider.width))
-				if (colorSlider.pixels.getPixel32(pixelx, pixely) != FlxColor.TRANSPARENT) colorSlider.pixels.setPixel32(pixelx, pixely, color);
+		for (pixelY in 0...Std.int(colorSlider.height)) {
+			var color:Int = FlxColor.fromHSB(pixelY / (colorSlider.height-1) * 360, 1, 1);
+			for (pixelX in 0...Std.int(colorSlider.width))
+				if (colorSlider.pixels.getPixel32(pixelX, pixelY) != FlxColor.TRANSPARENT) colorSlider.pixels.setPixel32(pixelX, pixelY, color);
 		}
 		colorSlider.pixels.unlock();
 
@@ -123,7 +123,7 @@ class UIColorwheel extends UISliceSprite {
 	public var colorChanged:Bool = false;
 
 	// Make the colorwheel feel better
-	static inline var hitBoxExtenstion:Float = 8;
+	static inline var hitBoxExtension:Float = 8;
 
 	public override function update(elapsed:Float) {
 		if (hovered && FlxG.mouse.pressed) {
@@ -132,7 +132,7 @@ class UIColorwheel extends UISliceSprite {
 			for (sprite in [colorPicker, colorSlider]) {
 				var spritePos:FlxPoint = sprite.getScreenPosition(FlxPoint.get(), __lastDrawCameras[0]);
 
-				if (((mousePos.x > (spritePos.x - (hitBoxExtenstion/2))) && (mousePos.x < spritePos.x - (hitBoxExtenstion/2) + (sprite.width + hitBoxExtenstion))) && ((mousePos.y > (spritePos.y - (hitBoxExtenstion/2))) && (mousePos.y < spritePos.y - (hitBoxExtenstion/2) + (sprite.height + hitBoxExtenstion)))) {
+				if (((mousePos.x > (spritePos.x - (hitBoxExtension/2))) && (mousePos.x < spritePos.x - (hitBoxExtension/2) + (sprite.width + hitBoxExtension))) && ((mousePos.y > (spritePos.y - (hitBoxExtension/2))) && (mousePos.y < spritePos.y - (hitBoxExtension/2) + (sprite.height + hitBoxExtension)))) {
 					mousePos -= FlxPoint.weak(spritePos.x, spritePos.y);
 					mousePos.set(FlxMath.bound(mousePos.x, 0, sprite.width), FlxMath.bound(mousePos.y, 0, sprite.height));
 

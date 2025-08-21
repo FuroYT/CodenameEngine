@@ -81,8 +81,8 @@ class HashLinkFixer {
 						var returns:Bool = !fun.ret.match(TPath({name: "Void"}));
 
 						var printer = new haxe.macro.Printer();
-						if(cl.module == "hl.Gc" && fun.ret == null) returns = false; // fix since they dont explicitly set :Void
-						if(cl.module == "hl.Format" && fun.ret == null) returns = false; // fix since they dont explicitly set :Void
+						if(cl.module == "hl.Gc" && fun.ret == null) returns = false; // fix since they don't explicitly set :Void
+						if(cl.module == "hl.Format" && fun.ret == null) returns = false; // fix since they don't explicitly set :Void
 
 						var name = 'hlf_${f.name}';
 
@@ -114,7 +114,7 @@ class HashLinkFixer {
 							default:
 						}
 
-						var fiel:Field = {
+						var field:Field = {
 							name: name,
 							pos: Context.currentPos(),
 							kind: FFun({
@@ -126,7 +126,7 @@ class HashLinkFixer {
 							access: f.access.copy().filter(function(a) return a != APublic && a != APrivate).concat([APrivate]),
 							meta: meta
 						};
-						fields.push(fiel);
+						fields.push(field);
 						definedFields.push(f.name);
 
 						// Remove meta from original function
@@ -150,8 +150,5 @@ class HashLinkFixer {
 
 		return fields;
 	}
-}
-#else
-class HashLinkFixer {
 }
 #end

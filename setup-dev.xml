@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<libraries>
+	<print pretty="true">Setting up dev libs...</print>
+
+	<cmd>
+		<line>mkdir dev-libs</line>
+	</cmd>
+
+	<if cond="hxcpp || all">
+		<cmd>
+			<line>cd dev-libs</line>
+			<line>git clone https://github.com/NeeEoo/hxcpp hxcpp</line>
+			<line>cd ..</line>
+			<line>haxelib dev hxcpp dev-libs/hxcpp</line>
+		</cmd>
+
+		<!-- Build hxcppp -->
+		<cmd inLib="hxcpp" dir="tools/hxcpp" cmd="haxe compile.hxml" />
+	</if>
+
+	<if cond="openfl || all">
+		<cmd>
+			<line>cd dev-libs</line>
+			<line>git clone https://github.com/FNF-CNE-Devs/openfl openfl</line>
+			<line>cd ..</line>
+			<line>haxelib dev openfl dev-libs/openfl</line>
+		</cmd>
+	</if>
+
+	<!-- <if cond="lime || all">
+		<cmd>
+			<line>cd dev-libs</line>
+			<line>git clone https://github.com/FNF-CNE-Devs/lime lime</line>
+			<line>cd ..</line>
+			<line>haxelib dev lime dev-libs/lime</line>
+		</cmd>
+
+		<!- - Build lime - ->
+		<cmd inLib="lime" cmd="haxelib run lime rebuild . $PLATFORM -clean" />
+		<cmd inLib="lime" dir="tools" cmd="haxe tools.hxml" />
+	</if> -->
+
+	<if cond="flixel || all">
+		<cmd>
+			<line>cd dev-libs</line>
+			<line>git clone https://github.com/FNF-CNE-Devs/flixel flixel</line>
+			<line>cd ..</line>
+			<line>haxelib dev flixel dev-libs/flixel</line>
+		</cmd>
+	</if>
+
+	<if cond="flixel-addons || all">
+		<cmd>
+			<line>cd dev-libs</line>
+			<line>git clone https://github.com/FNF-CNE-Devs/flixel-addons flixel-addons</line>
+			<line>cd ..</line>
+			<line>haxelib dev flixel-addons dev-libs/flixel-addons</line>
+		</cmd>
+	</if>
+
+	<if cond="hscript-improved || all">
+		<cmd>
+			<line>cd dev-libs</line>
+			<line>git clone https://github.com/FNF-CNE-Devs/hscript-improved hscript-improved</line>
+			<line>cd ..</line>
+			<line>haxelib dev hscript-improved dev-libs/hscript-improved</line>
+		</cmd>
+	</if>
+
+	<if cond="flxanimate || all">
+		<cmd>
+			<line>cd dev-libs</line>
+			<line>git clone https://github.com/FNF-CNE-Devs/flxanimate flxanimate</line>
+			<line>cd ..</line>
+			<line>haxelib dev flxanimate dev-libs/flxanimate</line>
+		</cmd>
+	</if>
+
+	<if cond="hxdiscord_rpc || all">
+		<cmd>
+			<line>cd dev-libs</line>
+			<line>git clone https://github.com/FNF-CNE-Devs/hxdiscord_rpc hxdiscord_rpc</line>
+			<line>cd ..</line>
+			<line>haxelib dev hxdiscord_rpc dev-libs/hxdiscord_rpc</line>
+		</cmd>
+	</if>
+
+	<if cond="away3d || all">
+		<cmd>
+			<line>cd dev-libs</line>
+			<line>git clone https://github.com/FNF-CNE-Devs/away3d away3d</line>
+			<line>cd ..</line>
+			<line>haxelib dev away3d dev-libs/away3d</line>
+		</cmd>
+	</if>
+
+	<print pretty="true">Setup for dev libs complete!</print>
+</libraries>

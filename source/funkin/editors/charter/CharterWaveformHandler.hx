@@ -1,9 +1,9 @@
 package funkin.editors.charter;
 
-import flixel.util.FlxColor;
-import funkin.backend.system.Conductor;
 import flixel.sound.FlxSound;
+import flixel.util.FlxColor;
 import funkin.backend.shaders.CustomShader;
+import funkin.backend.system.Conductor;
 import openfl.display.BitmapData;
 
 class CharterWaveformHandler extends FlxBasic {

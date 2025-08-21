@@ -1,9 +1,9 @@
 package funkin.editors.charter;
 
-import funkin.game.Stage;
-import funkin.backend.chart.ChartData;
 import flixel.math.FlxPoint;
 import funkin.backend.chart.ChartData.ChartMetaData;
+import funkin.backend.chart.ChartData;
+import funkin.game.Stage;
 
 using StringTools;
 

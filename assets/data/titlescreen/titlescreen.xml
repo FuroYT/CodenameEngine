@@ -7,7 +7,7 @@
 			<anim name="danceRight" anim="gfDance" indices="15,16,17,18,19,20,21,22,23,24,25,26,27,28,29" />
 		</sprite>
 
-		<titleEnter sprite="titleEnter" x="-150" y="-100" />
+		<!-- <titleEnter sprite="titleEnter" x="100" y="576" /> --> <!-- FlxG.height * 0.8 -->
 	</sprites>
 
 	<intro length="16">

@@ -29,13 +29,21 @@ class Macros {
 
 		var isHl = Context.defined("hl");
 
+		var compathx4 = [
+			"sys.db.Sqlite",
+			"sys.db.Mysql",
+			"sys.db.Connection",
+			"sys.db.ResultSet",
+			"haxe.remoting.Proxy",
+		];
+
 		if(Context.defined("sys")) {
 			for(inc in ["sys", "openfl.net", "funkin.backend.system.net"]) {
 				if(!isHl)
-					Compiler.include(inc);
+					Compiler.include(inc, compathx4);
 				else {
 					// TODO: Hashlink
-					//Compiler.include(inc, ["sys.net.UdpSocket", "openfl.net.DatagramSocket"]); // fixes FATAL ERROR : Failed to load function std@socket_set_broadcast
+					//Compiler.include(inc, compathx4.concat(["sys.net.UdpSocket", "openfl.net.DatagramSocket"]); // fixes FATAL ERROR : Failed to load function std@socket_set_broadcast
 				}
 			}
 		}

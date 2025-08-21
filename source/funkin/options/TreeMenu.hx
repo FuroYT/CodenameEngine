@@ -1,11 +1,11 @@
 package funkin.options;
 
-import funkin.editors.ui.UIState;
 import flixel.FlxState;
-import funkin.backend.FunkinText;
 import flixel.tweens.FlxTween;
-import funkin.menus.MainMenuState;
 import flixel.util.typeLimit.OneOfTwo;
+import funkin.backend.FunkinText;
+import funkin.editors.ui.UIState;
+import funkin.menus.MainMenuState;
 import funkin.options.type.OptionType;
 import funkin.options.type.TextOption;
 import funkin.backend.system.framerate.Framerate;

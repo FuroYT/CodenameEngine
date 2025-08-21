@@ -1,7 +1,7 @@
 package funkin.editors.character;
 
-import flixel.util.FlxColor;
 import flixel.math.FlxPoint;
+import flixel.util.FlxColor;
 
 class CharacterAnimButtons extends UIButton {
 	public var anim:String = "";
