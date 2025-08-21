@@ -5,6 +5,9 @@ import haxe.Json;
 import sys.io.File;
 import sys.io.Process;
 import sys.FileSystem;
+import commands.api.*;
+
+using StringTools;
 
 class Setup {
 	private static function recursiveDelete(path:String) {
