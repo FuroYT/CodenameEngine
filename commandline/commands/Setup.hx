@@ -310,6 +310,64 @@ class Setup {
 			str += ch;
 		return str;
 	}
+
+	public static function getLibs(filename:String):Array<Library> {
+		if(!FileSystem.exists(filename)) {
+			prettyPrint('Cannot find libs.xml file at "$filename"');
+			Sys.exit(1);
+		}
+
+		var libs:Array<Library> = [];
+		var libsXML:Access = new Access(Xml.parse(File.getContent(filename)).firstElement());
+
+		for (libNode in libsXML.elements) {
+			var lib:Library = {
+				name: libNode.att.name,
+				type: libNode.name,
+				skipDeps: libNode.has.skipDeps ? libNode.att.skipDeps == "true" : false,
+			};
+			if (libNode.has.global) lib.global = libNode.att.global;
+			switch (lib.type) {
+				case "lib":
+					if (libNode.has.version) lib.version = libNode.att.version;
+				case "git":
+					if (libNode.has.url) lib.url = libNode.att.url;
+					if (libNode.has.ref) lib.ref = libNode.att.ref;
+			}
+			libs.push(lib);
+		}
+
+		return libs;
+	}
+
+	public static function getLibsHash(args:Array<String>) {
+		var filename = "./libs.xml";
+		for(arg in args) {
+			if (arg.startsWith("--lib=")) {
+				filename = arg.substr("--lib=".length);
+			}
+		}
+
+		var libs = getLibs(filename);
+
+		var hashes:Array<String> = [];
+		for(lib in libs) {
+			switch(lib.type) {
+				case "lib":
+					hashes.push(Haxelib.getVersion(lib.name, lib.version));
+				case "git":
+					if(lib.url.startsWith("https://github.com/"))
+						hashes.push(Github.getLatestCommit(lib.url.substr("https://github.com/".length), lib.ref != null ? lib.ref : "master"));
+					else
+						Sys.stderr().writeString('Cannot get hash for git library ${lib.name} because it\'s not a github repo, url is ${lib.url}\n');
+				default:
+					prettyPrint('Cannot resolve library of type "${lib.type}"');
+			}
+		}
+
+		var hash = haxe.crypto.Md5.encode(hashes.join(","));
+		Sys.print(hash);
+	}
 }
 
 typedef Library = {

@@ -97,7 +97,7 @@ class Main {
 			{
 				names: ["get-libs-hash"],
 				doc: "Gets the hash of the current libs.",
-				func: Update.getLibsHash,
+				func: Setup.getLibsHash,
 				hidden: true,
 				dDoc: "Usage: get-libs-hash\n" +
 				"\nPrints the hash of the current libs."
