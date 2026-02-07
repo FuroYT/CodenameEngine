@@ -9,38 +9,43 @@ using StringTools;
 
 class Project extends HXProject
 {
-	static final TITLE:String = "Friday Night Funkin' - Codename Engine";
-	static final EXECUTABLE:String = "CodenameEngine";
-	static final VERSION:String = "1.0.1";
-	static final COMPANY:String = "Yoshman29";
-	static final PACKAGE:String = "com.codenamecrew.codenameengine";
-	static final MAIN_CLASS:String = "funkin.backend.system.MainApplication";
+	var TITLE(get, null):String;
+	function get_TITLE():String {
+		return isMobile() ? "FNF - CNE" : "Friday Night Funkin' - Codename Engine";
+	}
+	final EXECUTABLE:String = "CodenameEngine";
+	final VERSION:String = "1.0.1";
+	final COMPANY:String = "CodenameCrew";
+	final PACKAGE:String = "com.codenamecrew.codenameengine";
+	final MAIN_CLASS:String = "funkin.backend.system.Main";
 
-	static final PRELOADER:String = "flixel.system.FlxPreloader";
-	static final SOURCE_FOLDERS:Array<String> = ["source"];
+	final PRELOADER:String = "openfl.display.Preloader";
+	final SOURCE_FOLDERS:Array<String> = ["source"];
 
-	// Compile Flags
-	static final EMBED_ASSETS:CompileFlag = CompileFlag.get("EMBED_ASSETS");
-	static final PRELOAD_ALL:CompileFlag = CompileFlag.get("PRELOAD_ALL");
-	static final STRIPPED_COMPILE:CompileFlag = CompileFlag.get("STRIPPED_COMPILE");
-	static final UPDATE_CHECKING:CompileFlag = CompileFlag.get("UPDATE_CHECKING");
-	static final DISCORD_RPC:CompileFlag = CompileFlag.get("DISCORD_RPC");
-	static final MODCHARTING_FEATURES:CompileFlag = CompileFlag.get("MODCHARTING_FEATURES");
-	static final GITHUB_API:CompileFlag = CompileFlag.get("GITHUB_API");
-	static final COMPILE_ALL_CLASSES:CompileFlag = CompileFlag.get("COMPILE_ALL_CLASSES");
-	static final CUSTOM_CLASSES:CompileFlag = CompileFlag.get("CUSTOM_CLASSES");
-	static final ALLOW_MULTITHREADING:CompileFlag = CompileFlag.get("ALLOW_MULTITHREADING");
-	static final MOD_SUPPORT:CompileFlag = CompileFlag.get("MOD_SUPPORT");
-	static final TRANSLATIONS_SUPPORT:CompileFlag = CompileFlag.get("TRANSLATIONS_SUPPORT");
-	static final GLOBAL_SCRIPT:CompileFlag = CompileFlag.get("GLOBAL_SCRIPT");
-	static final SOFTCODED_STATES:CompileFlag = CompileFlag.get("SOFTCODED_STATES");
-	static final NDLLS_SUPPORTED:CompileFlag = CompileFlag.get("NDLLS_SUPPORTED");
-	static final USE_ADAPTED_ASSETS:CompileFlag = CompileFlag.get("USE_ADAPTED_ASSETS");
-	static final THREE_D_SUPPORT:CompileFlag = CompileFlag.get("THREE_D_SUPPORT");
-	static final NAPE_ENABLED:CompileFlag = CompileFlag.get("NAPE_ENABLED");
-	static final VIDEO_CUTSCENES:CompileFlag = CompileFlag.get("VIDEO_CUTSCENES");
-	static final SHOW_BUILD_ON_FPS:CompileFlag = CompileFlag.get("SHOW_BUILD_ON_FPS");
-	static final DARK_MODE_WINDOW:CompileFlag = CompileFlag.get("DARK_MODE_WINDOW");
+	// Compilation Flags
+	static final EMBED_ASSETS = CompileFlag.get("EMBED_ASSETS");
+	static final PRELOAD_ALL = CompileFlag.get("PRELOAD_ALL");
+	static final STRIPPED_COMPILE = CompileFlag.get("STRIPPED_COMPILE");
+	static final UPDATE_CHECKING = CompileFlag.get("UPDATE_CHECKING");
+	static final UPDATE_DOWNLOADING = CompileFlag.get("UPDATE_DOWNLOADING");
+	static final DISCORD_RPC = CompileFlag.get("DISCORD_RPC");
+	static final MODCHARTING_FEATURES = CompileFlag.get("MODCHARTING_FEATURES");
+	static final GITHUB_API = CompileFlag.get("GITHUB_API");
+	static final COMPILE_ALL_CLASSES = CompileFlag.get("COMPILE_ALL_CLASSES");
+	static final CUSTOM_CLASSES = CompileFlag.get("CUSTOM_CLASSES");
+	static final ALLOW_MULTITHREADING = CompileFlag.get("ALLOW_MULTITHREADING");
+	static final MOD_SUPPORT = CompileFlag.get("MOD_SUPPORT");
+	static final TRANSLATIONS_SUPPORT = CompileFlag.get("TRANSLATIONS_SUPPORT");
+	static final GLOBAL_SCRIPT = CompileFlag.get("GLOBAL_SCRIPT");
+	static final SOFTCODED_STATES = CompileFlag.get("SOFTCODED_STATES");
+	static final NDLLS_SUPPORTED = CompileFlag.get("NDLLS_SUPPORTED");
+	static final USE_ADAPTED_ASSETS = CompileFlag.get("USE_ADAPTED_ASSETS");
+	static final THREE_D_SUPPORT = CompileFlag.get("THREE_D_SUPPORT");
+	static final NAPE_ENABLED = CompileFlag.get("NAPE_ENABLED");
+	static final VIDEO_CUTSCENES = CompileFlag.get("VIDEO_CUTSCENES");
+	static final SHOW_BUILD_ON_FPS = CompileFlag.get("SHOW_BUILD_ON_FPS");
+	static final DARK_MODE_WINDOW = CompileFlag.get("DARK_MODE_WINDOW");
+	static final TOUCH_CONTROLS = CompileFlag.get("TOUCH_CONTROLS");
 
 	public function new():Void
 	{
@@ -169,6 +174,11 @@ class Project extends HXProject
 	{
 		trace("Configuring game...");
 		meta.title = TITLE;
+
+		// taken from V-Slice so credit is due here
+		// iOS uses this character code instead of spaces...
+		if (isIOS()) meta.title = ~/ /ig.replace(meta.title, "\u2002");
+
 		meta.version = VERSION;
 		meta.company = COMPANY;
 		meta.packageName = PACKAGE;
@@ -181,9 +191,14 @@ class Project extends HXProject
 		trace('Output directory: $buildDir');
 		app.path = buildDir;
 
-		sources = SOURCE_FOLDERS;
-		templatePaths.push(Path.combine(Haxelib.getPath(new Haxelib(#if lime "lime" #else "hxp" #end)), #if lime "templates" #else "" #end));
+		for (dir in SOURCE_FOLDERS)
+			sources.push(dir);
+		//templatePaths.push(Path.combine(Haxelib.getPath(new Haxelib(#if lime "lime" #else "hxp" #end)), #if lime "templates" #else "" #end));
 
+		window.fps = 60;
+		window.width = 1280;
+		window.height = 720;
+		window.background = 0xFFFF0FF;
 		window.hardware = true;
 		window.vsync = false;
 		window.allowHighDPI = true;
@@ -228,6 +243,7 @@ class Project extends HXProject
 		EMBED_ASSETS.integrate(false);
 		
 		UPDATE_CHECKING.integrate(!isWeb() && !isHashLink());
+		UPDATE_DOWNLOADING.integrate(UPDATE_CHECKING.isEnabled() && !isMobile()); // Mobile can check for updates but cannot update itself
 		DISCORD_RPC.integrate(isCPP() && isDesktop());
 		STRIPPED_COMPILE.integrate(false); //should be isRelease() if you want to use it
 		MODCHARTING_FEATURES.integrate(STRIPPED_COMPILE.isDisabled());
@@ -246,6 +262,7 @@ class Project extends HXProject
 		VIDEO_CUTSCENES.integrate(isCPP() && (isDesktop() || isMobile()));
 		SHOW_BUILD_ON_FPS.integrate(true);
 		DARK_MODE_WINDOW.integrate(true);
+		TOUCH_CONTROLS.integrate(isMobile());
 
 		setDefine("FLX_NO_GENERIC"); // Disable a optimization, to allow reflection to use more functions
 
@@ -330,10 +347,37 @@ class Project extends HXProject
 	function configureIcons()
 	{
 		trace("Configuring app icons...");
-		// TODO: ADD MOBILE ICONS
-		for (size in [16, 32, 64])
-			addIcon('art/icon${size}.png', size);
-		addIcon("art/icons/iconOG.png");
+		// TODO: ADD ANDROID ICONS
+		if (isIOS()) {
+			// iOS 26+ (Light Mode, Dark Mode, Translucent and Tinted App Icons)
+      		adaptiveIcon = new AdaptiveIcon('art/icons/iOS/AppIcon.icon', false);
+
+			// Legacy Icons
+			var iconSizes:Map<Int, Any> = [
+				20 => [2, 3], 29 => [1, 2, 3], 40 => 2, 60 => [2, 3], 1024 => 1,
+			];
+			inline function addSize(size:Int, scale:Int)
+				addIcon('art/icons/iOS/Icon-${size}x${size}${scale == 1 ? "" : '@${scale}x'}.png', Std.int(size * scale));
+			for (size in iconSizes.keys()) {
+				var scales = iconSizes.get(size);
+				if (scales is Int)
+					addSize(size, scales);
+				else {
+					var scales:Array<Int> = cast scales;
+					for (i in 0...scales.length)
+						addSize(size, scales[i]);
+				}
+			}
+			addIcon("art/icons/iOS/Icon-1024x1024.png");
+
+			config.set("ios.non-exempt-encryption", "false");
+			config.set("ios.team-id", "76JKPRB9Y7");
+			config.set("ios.deployment", "16.0");
+		} else {
+			for (size in [16, 32, 64])
+				addIcon('art/icons/icon${size}.png', size);
+			addIcon("art/icons/iconOG.png");
+		}
 	}
 
 	function includeHaxelib(name:String, version:String = ""):Void
@@ -472,9 +516,9 @@ class CompileFlag {
 	public function integrate(defaultEnabled:Bool = false):Void {
 		var inverse = getInverse();
 
-		if (isEnabled()) inverse.disable(true); // Makes sure the inverse is disabled if it wasn't already
-		else if (inverse.isEnabled()) disable(true); // If the inverse is enabled, disable this
-		else (defaultEnabled ? enable : disable)(true); // Set to the default state otherwise
+		if (isEnabled()) inverse.disable(false); // Makes sure the inverse is disabled if it wasn't already
+		else if (inverse.isEnabled()) disable(false); // If the inverse is enabled, disable this
+		else (defaultEnabled ? enable : disable)(false); // Set to the default state otherwise
 	}
 	
 	public function isEnabled():Bool {
@@ -489,6 +533,6 @@ class CompileFlag {
 		var inversionName = name;
 		if (!inversionName.startsWith(INVERSION))
 			inversionName = INVERSION + inversionName;
-		return new CompileFlag(inversionName);
+		return CompileFlag.get(inversionName);
 	}
 }

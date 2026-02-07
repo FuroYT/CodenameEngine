@@ -5,8 +5,7 @@
 
 		<!-- OpenFL & Lime (Required for Flixel) -->
 		<git name="openfl" url="https://github.com/CodenameCrew/cne-openfl" />
-		<lib name="lime" version="8.2.0" />
-		<!-- <git name="lime" url="https://github.com/CodenameCrew/cne-lime" />  disabled for now until fixed -->
+		<git name="lime" url="https://github.com/FuroYT/lime" ref="feat/adaptive-icons-ios" />
 
 		<!-- Flixel -->
 		<git name="flixel" url="https://github.com/CodenameCrew/cne-flixel" />
@@ -31,7 +30,7 @@
 		<lib global="true" name="hxp" /> <lib name="hxp" />
 		<lib global="true" name="format" /> <lib name="format" />
 
-		<git name="hxcpp" url="https://github.com/CodenameCrew/cne-hxcpp" />
+		<git name="hxcpp" url="https://github.com/FunkinCrew/hxcpp" />
 	</if>
 
 	<!-- Hxcpp Building -->

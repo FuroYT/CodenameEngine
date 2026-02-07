@@ -133,7 +133,12 @@ class UpdateAvailableScreen extends MusicBeatState {
 	public function select() {
 		if (installSelected) {
 			CoolUtil.playMenuSFX(CONFIRM);
+			#if UPDATE_DOWNLOADING
 			FlxG.switchState(new UpdateScreen(check));
+			#else
+			FlxG.openURL(check.updates.last().html_url);
+			FlxG.switchState(new MainMenuState());
+			#end
 		} else {
 			CoolUtil.playMenuSFX(CANCEL);
 			FlxG.switchState(new MainMenuState());

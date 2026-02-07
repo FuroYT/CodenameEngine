@@ -10,12 +10,12 @@ import lime.utils.ArrayBuffer;
 import lime.utils.UInt8Array;
 import lime.utils.UInt16Array;
 #if flash
-import openfl.net.URLRequest;
-import openfl.system.Capabilities;
-import openfl.Lib;
+import flash.net.URLRequest;
+import flash.system.Capabilities;
+import flash.Lib;
 #end
 #if air
-import openfl.desktop.NativeApplication;
+import flash.desktop.NativeApplication;
 #end
 #if ((js && html5) || electron)
 import js.html.Element;
@@ -35,9 +35,9 @@ import sys.io.Process;
 @:access(lime._internal.backend.native.NativeCFFI)
 @:access(lime.system.Display)
 @:access(lime.system.DisplayMode)
-#if (cpp && windows && !HXCPP_MINGW && !lime_disable_gpu_hint)
+#if (cpp && windows && !lime_disable_gpu_hint)
 @:cppFileCode('
-#if defined(HX_WINDOWS)
+#if defined(HX_WINDOWS) && !defined(__MINGW32__)
 extern "C" {
 	_declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
 	_declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
@@ -191,7 +191,18 @@ class System
 	#if (!lime_doc_gen || sys)
 	/**
 		Attempts to exit the application. Dispatches `onExit`, and will not
-		exit if the event is canceled.
+		exit if the event is canceled. When exiting using this method, Lime will
+		gracefully shut down a number of subsystems, including (but not limited
+		to) audio, graphics, timers, and game controllers.
+
+		To properly exit a Lime application, it's best to call Lime's
+		`System.exit()` instead of calling Haxe's built-in `Sys.exit()`. When
+		targeting native platforms especially, Lime's is built on C++ libraries
+		that expose functions to clean up resources properly on exit. Haxe's
+		`Sys.exit()` exits immediately without giving Lime a chance to clean
+		things up. With that in mind, the proper and correct way to exit a Lime
+		app is by calling `lime.system.System.exit()`, and to avoid using
+		`Sys.exit()`.
 	**/
 	public static function exit(code:Int):Void
 	{
@@ -222,6 +233,18 @@ class System
 	#end
 
 	/**
+		Returns the display orientation with the specified ID.
+	**/
+	public static function getDisplayOrientation(id:Int):DisplayOrientation
+	{
+		#if (lime_cffi && !macro)
+		return NativeCFFI.lime_system_get_display_orientation(id);
+		#else
+		return DISPLAY_ORIENTATION_UNKNOWN;
+		#end
+	}
+
+	/**
 		Returns information about the video display with the specified ID.
 	**/
 	public static function getDisplay(id:Int):Display
@@ -233,11 +256,7 @@ class System
 		{
 			var display = new Display();
 			display.id = id;
-			#if hl
-			display.name = @:privateAccess String.fromUTF8(displayInfo.name);
-			#else
-			display.name = displayInfo.name;
-			#end
+			display.name = CFFI.stringValue(displayInfo.name);
 			display.bounds = new Rectangle(displayInfo.bounds.x, displayInfo.bounds.y, displayInfo.bounds.width, displayInfo.bounds.height);
 
 			#if ios
@@ -367,17 +386,11 @@ class System
 			#elseif mac
 			Sys.command("/usr/bin/open", [path]);
 			#elseif linux
-			// generally `xdg-open` should work in every distro
-			var cmd = Sys.command("xdg-open", [path, "&"]);
-			// run old command JUST IN CASE it fails, which it shouldn't
-			if (cmd != 0) cmd = Sys.command("/usr/bin/xdg-open", [path, "&"]);
+			Sys.command("/usr/bin/xdg-open", [path]);
 			#elseif (js && html5)
 			Browser.window.open(path, "_blank");
 			#elseif flash
 			Lib.getURL(new URLRequest(path), "_blank");
-			#elseif android
-			var openFile = JNI.createStaticMethod("org/haxe/lime/GameActivity", "openFile", "(Ljava/lang/String;)V");
-			openFile(path);
 			#elseif (lime_cffi && !macro)
 			NativeCFFI.lime_system_open_file(path);
 			#end
@@ -397,13 +410,26 @@ class System
 			Browser.window.open(url, target);
 			#elseif flash
 			Lib.getURL(new URLRequest(url), target);
-			#elseif android
-			var openURL = JNI.createStaticMethod("org/haxe/lime/GameActivity", "openURL", "(Ljava/lang/String;Ljava/lang/String;)V");
-			openURL(url, target);
 			#elseif (lime_cffi && !macro)
 			NativeCFFI.lime_system_open_url(url, target);
 			#end
 		}
+	}
+
+	public static function getHint(key:String):String
+	{
+		if (key != null)
+		{
+			#if (lime_cffi && !macro)
+			#if (ios || tvos)
+			return NativeCFFI.lime_system_get_hint(key);
+			#else
+			return CFFI.stringValue(NativeCFFI.lime_system_get_hint(key));
+			#end
+			#end
+		}
+
+		return null;
 	}
 
 	@:noCompletion private static function __copyMissingFields(target:Dynamic, source:Dynamic):Void
@@ -448,19 +474,11 @@ class System
 					}
 				}
 
-				#if hl
-				path = @:privateAccess String.fromUTF8(NativeCFFI.lime_system_get_directory(type, company, file));
-				#else
-				path = NativeCFFI.lime_system_get_directory(type, company, file);
-				#end
+				path = CFFI.stringValue(NativeCFFI.lime_system_get_directory(type, company, file));
 			}
 			else
 			{
-				#if hl
-				path = @:privateAccess String.fromUTF8(NativeCFFI.lime_system_get_directory(type, null, null));
-				#else
-				path = NativeCFFI.lime_system_get_directory(type, null, null);
-				#end
+				path = CFFI.stringValue(NativeCFFI.lime_system_get_directory(type, null, null));
 			}
 
 			#if windows
@@ -603,10 +621,13 @@ class System
 
 	@:noCompletion private static function __registerEntryPoint(projectName:String, entryPoint:Function):Void
 	{
+		trace("running pre init");
 		// executes first!!
 		#if (sys && !macro)
 		funkin.backend.system.Main.preInit();
 		#end
+
+		trace("ran pre init");
 
 		if (__applicationEntryPoint == null)
 		{
@@ -677,11 +698,7 @@ class System
 		if (__deviceModel == null)
 		{
 			#if (lime_cffi && !macro && (windows || ios || tvos))
-			#if hl
-			__deviceModel = @:privateAccess String.fromUTF8(NativeCFFI.lime_system_get_device_model());
-			#else
-			__deviceModel = NativeCFFI.lime_system_get_device_model();
-			#end
+			__deviceModel = CFFI.stringValue(NativeCFFI.lime_system_get_device_model());
 			#elseif android
 			var manufacturer:String = JNI.createStaticField("android/os/Build", "MANUFACTURER", "Ljava/lang/String;").get();
 			var model:String = JNI.createStaticField("android/os/Build", "MODEL", "Ljava/lang/String;").get();
@@ -712,11 +729,7 @@ class System
 		if (__deviceVendor == null)
 		{
 			#if (lime_cffi && !macro && windows && !html5)
-			#if hl
-			__deviceVendor = @:privateAccess String.fromUTF8(NativeCFFI.lime_system_get_device_vendor());
-			#else
-			__deviceVendor = NativeCFFI.lime_system_get_device_vendor();
-			#end
+			__deviceVendor = CFFI.stringValue(NativeCFFI.lime_system_get_device_vendor());
 			#elseif android
 			var vendor:String = JNI.createStaticField("android/os/Build", "MANUFACTURER", "Ljava/lang/String;").get();
 			if (vendor != null)
@@ -798,11 +811,7 @@ class System
 		if (__platformLabel == null)
 		{
 			#if (lime_cffi && !macro && windows && !html5)
-			#if hl
-			var label:String = @:privateAccess String.fromUTF8(NativeCFFI.lime_system_get_platform_label());
-			#else
-			var label:String = NativeCFFI.lime_system_get_platform_label();
-			#end
+			var label:String = CFFI.stringValue(NativeCFFI.lime_system_get_platform_label());
 			if (label != null) __platformLabel = StringTools.trim(label);
 			#elseif linux
 			__platformLabel = __runProcess("lsb_release", ["-ds"]);
@@ -860,11 +869,7 @@ class System
 		if (__platformVersion == null)
 		{
 			#if (lime_cffi && !macro && windows && !html5)
-			#if hl
-			__platformVersion = @:privateAccess String.fromUTF8(NativeCFFI.lime_system_get_platform_version());
-			#else
-			__platformVersion = NativeCFFI.lime_system_get_platform_version();
-			#end
+			__platformVersion = CFFI.stringValue(NativeCFFI.lime_system_get_platform_version());
 			#elseif android
 			var release = JNI.createStaticField("android/os/Build$VERSION", "RELEASE", "Ljava/lang/String;").get();
 			var api = JNI.createStaticField("android/os/Build$VERSION", "SDK_INT", "I").get();
@@ -894,7 +899,16 @@ class System
 	}
 }
 
-#if (haxe_ver >= 4.0) enum #else @:enum #end abstract SystemDirectory(Int) from Int to Int from UInt to UInt
+#if (haxe_ver >= 4.0) enum #else @:enum #end abstract DisplayOrientation(Int) from Int to Int from UInt to UInt
+{
+	var DISPLAY_ORIENTATION_UNKNOWN = 0;
+	var DISPLAY_ORIENTATION_LANDSCAPE = 1;
+	var DISPLAY_ORIENTATION_LANDSCAPE_FLIPPED = 2;
+	var DISPLAY_ORIENTATION_PORTRAIT = 3;
+	var DISPLAY_ORIENTATION_PORTRAIT_FLIPPED = 4;
+}
+
+#if (haxe_ver >= 4.0) private enum #else @:enum private #end abstract SystemDirectory(Int) from Int to Int from UInt to UInt
 {
 	var APPLICATION = 0;
 	var APPLICATION_STORAGE = 1;

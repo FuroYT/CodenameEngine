@@ -14,30 +14,24 @@ import sys.io.File;
 import sys.io.FileOutput;
 
 class AsyncUpdater {
-	// NON ASYNC STUFF
-	#if REGION
-	public function new(releases:Array<GitHubRelease>) {
-		this.releases = releases;
-	}
-
-	public function execute() {
-		Main.execAsync(installUpdates);
-	}
-	#end
-
-
 	#if windows
 	public static var executableGitHubName:String = "update-windows.exe";
 	public static var executableName:String = "CodenameEngine.exe";
-	#end
-	#if linux
+	#elseif linux
 	public static var executableGitHubName:String = "update-linux";
 	public static var executableName:String = "CodenameEngine";
-	#end
-	#if mac
+	#elseif mac
 	public static var executableGitHubName:String = "update-mac";
 	public static var executableName:String = "CodenameEngine";
+	#else
+	public static var executableGitHubName:String = "";
+	public static var executableName:String = "";
 	#end
+
+	// NON ASYNC STUFF
+	public function new(releases:Array<GitHubRelease>) {
+		this.releases = releases;
+	}
 
 	public var releases:Array<GitHubRelease>;
 	public var progress:UpdaterProgress = new UpdaterProgress();
@@ -47,6 +41,13 @@ class AsyncUpdater {
 
 	public var lastTime:Float = 0;
 	public var oldBytesLoaded:Float = 0;
+
+	#if NO_UPDATE_DOWNLOADING
+	public function execute() {}
+	#else
+	public function execute() {
+		Main.execAsync(installUpdates);
+	}
 
 	public function installUpdates() {
 		prepareInstallationEnvironment();
@@ -167,6 +168,7 @@ class AsyncUpdater {
 
 		FileSystem.createDirectory(path);
 	}
+	#end
 }
 
 class UpdaterProgress {
